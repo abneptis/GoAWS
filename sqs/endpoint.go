@@ -5,7 +5,7 @@ import "os"
 import "strconv"
 import "xml"
 //import "log"
-import "com.abneptis.oss/goaws"
+import "com.abneptis.oss/goaws/auth"
 
 type Endpoint struct {
   ProxyURL *http.URL
@@ -27,7 +27,7 @@ type createQueueResult struct {
   QueueUrl string
 }
 
-func (self *Endpoint)CreateQueue(id goaws.Signer, name string, dvtimeout int)(mq *Queue, err os.Error){
+func (self *Endpoint)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq *Queue, err os.Error){
   sqsReq, err := NewSQSRequest(map[string]string{
     "Action": "CreateQueue",
     "QueueName": name,
@@ -61,7 +61,7 @@ type listQueuesResult struct {
 }
 
 
-func (self *Endpoint)ListQueues(id goaws.Signer, prefix string)(out []*Queue, err os.Error){
+func (self *Endpoint)ListQueues(id auth.Signer, prefix string)(out []*Queue, err os.Error){
   sqsReq, err := NewSQSRequest(map[string]string{
     "Action": "ListQueues",
     "AWSAccessKeyId": string(id.PublicIdentity()),

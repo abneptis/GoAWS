@@ -1,7 +1,7 @@
 package main
 
 import "com.abneptis.oss/goaws/sqs"
-import "com.abneptis.oss/goaws"
+import "com.abneptis.oss/goaws/auth"
 
 import "flag"
 import "http"
@@ -36,11 +36,11 @@ func GetEndpoint()(ep *sqs.Endpoint, err os.Error){
   return
 }
 
-func GetAWSIdentity()(s goaws.Signer, err os.Error){
+func GetAWSIdentity()(s auth.Signer, err os.Error){
   if accessKeyId == nil || secretKeyId == nil || *accessKeyId == "" || *secretKeyId == "" {
    return nil, os.NewError("-access-key and -secret-key are both required")
   }
-  return goaws.NewIdentity("sha256", *accessKeyId, *secretKeyId)
+  return auth.NewIdentity("sha256", *accessKeyId, *secretKeyId)
 }
 
 

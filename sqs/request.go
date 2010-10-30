@@ -2,6 +2,7 @@ package sqs
 
 import "com.abneptis.oss/cryptools/signer"
 import "com.abneptis.oss/goaws"
+import "com.abneptis.oss/goaws/auth"
 import "com.abneptis.oss/maptools"
 import "com.abneptis.oss/urltools"
 
@@ -100,7 +101,7 @@ func sqsEscape(in string)(out string){
 
 
 
-func SignSQSRequest(id goaws.Signer, m string, u *http.URL, in *goaws.RequestMap)(err os.Error){
+func SignSQSRequest(id auth.Signer, m string, u *http.URL, in *goaws.RequestMap)(err os.Error){
   canonMap := maptools.StringStringEscape(in.Values, sqsEscape, sqsEscape)
   host := strings.Split(u.Host, ":", 2)
   canonString := fmt.Sprintf("%s\n%s\n%s\n%s", m, host[0], u.Path,
@@ -114,7 +115,7 @@ func SignSQSRequest(id goaws.Signer, m string, u *http.URL, in *goaws.RequestMap
 }
 
 
-func SignAndSendSQSRequest(id goaws.Signer, method string, u *http.URL, pu *http.URL, in *goaws.RequestMap)(resp *http.Response, err os.Error){
+func SignAndSendSQSRequest(id auth.Signer, method string, u *http.URL, pu *http.URL, in *goaws.RequestMap)(resp *http.Response, err os.Error){
   err = SignSQSRequest(id, method, u, in)
   if err != nil { return }
   hreq := MakeHTTPRequest(u, method, in.Values)

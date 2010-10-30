@@ -1,8 +1,7 @@
 package sqs
 
-import "com.abneptis.oss/goaws"
+import "com.abneptis.oss/goaws/auth"
 import "com.abneptis.oss/uuid"
-//import "log"
 import "bytes"
 import "http"
 import "os"
@@ -36,7 +35,7 @@ func NewQueueString(n string, u string, pu *http.URL)(q *Queue, err os.Error){
   return
 }
 
-func (self *Queue)Delete(id goaws.Signer)(err os.Error){
+func (self *Queue)Delete(id auth.Signer)(err os.Error){
   sqsReq, err := NewSQSRequest(map[string]string{
     "Action": "DeleteQueue",
     "AWSAccessKeyId": string(id.PublicIdentity()),
@@ -66,7 +65,7 @@ type sendMessageResult struct {
 
 
 // NB, we don't do any verification of the MD5
-func (self *Queue)Push(id goaws.Signer, body []byte)(msgid *uuid.UUID, err os.Error){
+func (self *Queue)Push(id auth.Signer, body []byte)(msgid *uuid.UUID, err os.Error){
    sqsReq, err := NewSQSRequest(map[string]string{
     "Action": "SendMessage",
     "AWSAccessKeyId": string(id.PublicIdentity()),
@@ -89,7 +88,7 @@ func (self *Queue)Push(id goaws.Signer, body []byte)(msgid *uuid.UUID, err os.Er
   return
 }
 
-func (self *Queue)PushString(id goaws.Signer, body string)(*uuid.UUID, os.Error){
+func (self *Queue)PushString(id auth.Signer, body string)(*uuid.UUID, os.Error){
   buff := bytes.NewBufferString(body)
   return self.Push(id, buff.Bytes())
 }
@@ -102,7 +101,7 @@ type receiveMessageResult struct {
   Message []*rawMessage
 }
 
-func (self *Queue)FetchMessages(id goaws.Signer, lim, timeout int)(m []*Message, err os.Error){
+func (self *Queue)FetchMessages(id auth.Signer, lim, timeout int)(m []*Message, err os.Error){
   if lim <= 0 { lim = MaxNumberOfMessages }
    sqsReq, err := NewSQSRequest(map[string]string{
     "Action": "ReceiveMessage",
