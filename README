@@ -4,3 +4,12 @@ I'm happy with the form of.
   Currently only SQS is supported, but s3 should exist shortly, with others
 coming as I implement them / patches arrive.
 
+  For quick usage examples of SQS, see sqs/tools/*.go.
+
+  Please note, full compilation may depend on the following modules, also
+available at github:
+
+  - github.com/abneptis/GoURLTools  (com.abneptis.oss/urltools)
+  - github.com/abneptis/GoMaptools  (com.abneptis.oss/maptools)
+  - github.com/abneptis/GoCryptools (com.abneptis.oss/cryptools)
+  - github.com/abneptis/GoUUID      (com.abneptis.oss/uuid)
