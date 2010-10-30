@@ -1,24 +1,28 @@
 package main
 
-import "com.abneptis.oss/goaws"
-import "com.abneptis.oss/goaws/sqs"
-import "http"
 import "flag"
 import "log"
 import "fmt"
 
 func main(){
-  url, _ := http.ParseURL("http://queue.amazonaws.com/")
-  //qs := sqs.NewEndpoint(url, nil)
-  //qName := flag.Arg(0)
-  //id, err := goaws.NewIdentity("sha256", "AKIAJVBFI6WMZSSBBFRQ",
-  //                  "m6ILj9yFxPlbJfITm64KoSHzweRXfZzNArP80OkD")
-  //if err != nil {
-  // log.Exitf("Couldn't create identity: %v\n", err)
-  //}
-  //q, err := qs.CreateQueue(id, qName, 90)
-  //if err != nil {
-  //  log.Exitf("Couldn't find/create queue: %v\n", err)
-  // }
-  
+  flag.Parse()
+  q, err := GetQueue()
+  if err != nil {
+    log.Exitf("Couldn't create queue: %v\n", err)
+  }
+  id, err := GetAWSIdentity()
+  if err != nil {
+    log.Exitf("Couldn't get identity: %v\n", err)
+  }
+  msg, err := GetMessage()
+  if err != nil {
+    log.Exitf("Couldn't read message: %v", err)
+  }
+  fmt.Printf("Read Message [%d]: %v\n", len(msg), msg)
+  mid, err := q.Push(id, msg)
+  if err != nil {
+    log.Exitf("Couldn't push to queue: %v\n", err)
+  }
+  fmt.Printf("%s\n",mid.String())
 }
+
