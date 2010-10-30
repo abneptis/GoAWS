@@ -12,7 +12,15 @@ list_queues: list_queues.go common_flags.go
 	$(GC) -o .$<.6 $^
 	$(LD) -o $@ .$<.6
 
-clean:
-	rm -f create_queue list_queues delete_queue
+pop: pop.go common_flags.go
+	$(GC) -o .$<.6 $^
+	$(LD) -o $@ .$<.6
 
-install: create_queue delete_queue list_queues
+push: push.go common_flags.go push_flags.go
+	$(GC) -o .$<.6 $^
+	$(LD) -o $@ .$<.6
+
+clean:
+	rm -f create_queue list_queues delete_queue push pop
+
+install: create_queue delete_queue list_queues push pop
