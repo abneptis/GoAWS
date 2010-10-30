@@ -1,4 +1,8 @@
 package goaws
+/* 
+  Copyright (c) 2010, Abneptis LLC.
+  See COPYRIGHT and LICENSE for details.
+*/
 
 import "com.abneptis.oss/cryptools/hashes"
 

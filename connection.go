@@ -1,7 +1,10 @@
 package goaws
+/* 
+  Copyright (c) 2010, Abneptis LLC.
+  See COPYRIGHT and LICENSE for details.
+*/
 
 import "http"
-//import "log"
 import "net"
 import "os"
 import "strings"
