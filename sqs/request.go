@@ -51,6 +51,12 @@ func NewSQSRequest(params map[string]string)(out goaws.RequestMap, err os.Error)
      "QueueName": false,
      // ListQueues
      "QueueNamePrefix": false,
+     // PushMessage
+     "MessageBody": false,
+     // ReceiveMessage
+     "MaxNumberOfMessages": false,
+     "AttributeName": false,
+     "VisibilityTimeout": false,
     },
   }
   for k,v := range(params){
@@ -113,6 +119,8 @@ func SignAndSendSQSRequest(id goaws.Signer, method string, u *http.URL, pu *http
   if err != nil { return }
   hreq := MakeHTTPRequest(u, method, in.Values)
   hreq.Close = true
+  //bb, _ := http.DumpRequest(hreq, true)
+  //os.Stderr.Write(bb)
   cc, err := goaws.ClientConnection("tcp", "", u,pu, nil)
   if err != nil && err != http.ErrPersistEOF { return }
   resp, err = goaws.SendRequest(cc, hreq)
