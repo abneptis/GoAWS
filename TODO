@@ -20,4 +20,3 @@ Ec2:
 All:
   - Refactor some of the general auth/message structures as other types are
     needed.
-  - Add tests outside of CLI utils
