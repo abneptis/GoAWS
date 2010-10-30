@@ -108,10 +108,10 @@ func SignSQSRequest(id goaws.Signer, m string, u *http.URL, in *goaws.RequestMap
 }
 
 
-func SignAndSendSQSRequest(id goaws.Signer, m string, u *http.URL, pu *http.URL, in *goaws.RequestMap)(resp *http.Response, err os.Error){
-  err = SignSQSRequest(id, "GET", u, in)
+func SignAndSendSQSRequest(id goaws.Signer, method string, u *http.URL, pu *http.URL, in *goaws.RequestMap)(resp *http.Response, err os.Error){
+  err = SignSQSRequest(id, method, u, in)
   if err != nil { return }
-  hreq := MakeHTTPRequest(u, "GET", in.Values)
+  hreq := MakeHTTPRequest(u, method, in.Values)
   hreq.Close = true
   cc, err := goaws.ClientConnection("tcp", "", u,pu, nil)
   if err != nil && err != http.ErrPersistEOF { return }
