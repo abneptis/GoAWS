@@ -14,7 +14,7 @@ import "time"
 import "encoding/base64"
 import "strconv"
 import "strings"
-import "fmt"
+//import "fmt"
 
 type Request struct {
   Method string
@@ -74,7 +74,7 @@ func s3Escape(in string)(out string){
 func SignS3Request(id auth.Signer, url *http.URL, in *Request)(err os.Error){
   exp, nil := in.Params.Get("Expires")
   canonString, _ := in.CanonicalQueryString("","", exp)
-  fmt.Printf("CanonString: [%s]\n", canonString)
+  //fmt.Printf("CanonString: [%s]\n", canonString)
   sig, err := signer.SignString64(id, base64.StdEncoding, canonString)
   if err == nil {
     err = in.Set("Signature", sig)
