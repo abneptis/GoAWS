@@ -7,6 +7,14 @@ import "net"
 import "os"
 import "bufio"
 
+// Construct a new Endpoint. 
+func NewEndpoint(u, pu *http.URL)(*Endpoint){
+  return &Endpoint {
+   URL: u,
+   ProxyURL: pu,
+  }
+}
+
 // An endpoint has two URL's, the "URL", or rather, the actual service
 // address, and a "ProxyURL", which is used for low-level connections if
 // it is present -- else the URL is connected to directly.
