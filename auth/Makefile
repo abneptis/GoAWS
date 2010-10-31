@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=com.abneptis.oss/goaws/auth
+TARG=com.abneptis.oss/aws/auth
 GOFILES=akidentity.go\
 	signer.go\
 
