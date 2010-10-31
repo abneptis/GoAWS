@@ -1,3 +1,11 @@
+// Command line tool functions.
+//
+// I should probably lower-case the functions, since these functions
+// generally expect pre-defined flags, and are simply helpers for
+// the various tools and exist within package "main" -- but at least
+// for akid/skid it could be relevant to other kits.
+//
+// Todo: evaluate moving those to aws/auth.
 package main
 
 import "com.abneptis.oss/aws/awsconn"

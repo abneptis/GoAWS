@@ -1,4 +1,18 @@
+// Handles basic connection primatives.
+//
+// Unlike a simple connection, awsconn carries a second URL
+// used for proxy-server data.  It is not a connection, but
+// but a set of helpers to the "net" class of functionality.
+//
+// It is the encouraged way for goaws
+// utlities to establish and maintain connection details so
+// that proxy configuration data is available to all 
+// callers.
 package awsconn
+/* 
+  Copyright (c) 2010, Abneptis LLC.
+  See COPYRIGHT and LICENSE for details.
+*/
 
 import "com.abneptis.oss/urltools"
 

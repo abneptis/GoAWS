@@ -1,3 +1,8 @@
+// Amazon AWS Simple Queue Service interface.
+//
+// This package implements basic SQS functionality
+// including queue creation, deletion, enumeration,
+// and message pushing/fetching and deletion.
 package sqs
 
 import "http"
