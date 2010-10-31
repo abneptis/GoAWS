@@ -2,6 +2,7 @@ package sqs
 
 import "com.abneptis.oss/cryptools/signer"
 import "com.abneptis.oss/aws"
+import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/maptools"
 import "com.abneptis.oss/urltools"
@@ -115,7 +116,7 @@ func SignSQSRequest(id auth.Signer, m string, u *http.URL, in *aws.RequestMap)(e
 }
 
 
-func SignAndSendSQSRequest(id auth.Signer, method string, ep *aws.Endpoint, in *aws.RequestMap)(resp *http.Response, err os.Error){
+func SignAndSendSQSRequest(id auth.Signer, method string, ep *awsconn.Endpoint, in *aws.RequestMap)(resp *http.Response, err os.Error){
   err = SignSQSRequest(id, method, ep.URL, in)
   if err != nil { return }
   hreq := MakeHTTPRequest(ep.URL, method, in.Values)

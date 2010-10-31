@@ -1,4 +1,4 @@
-package aws
+package awsconn
 
 import "com.abneptis.oss/urltools"
 

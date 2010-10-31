@@ -1,6 +1,7 @@
 package sqs
 
-import "com.abneptis.oss/aws"
+//import "com.abneptis.oss/aws"
+import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/uuid"
 import "bytes"
@@ -13,14 +14,14 @@ var MaxNumberOfMessages = 10
 
 type Queue struct {
   Name string
-  Endpoint *aws.Endpoint
+  Endpoint *awsconn.Endpoint
 }
 
-func NewQueue(n string, ep *aws.Endpoint)(*Queue){
+func NewQueue(n string, ep *awsconn.Endpoint)(*Queue){
   return &Queue{Name:n, Endpoint: ep}
 }
 
-func NewQueueURL(ep *aws.Endpoint)(mq *Queue){
+func NewQueueURL(ep *awsconn.Endpoint)(mq *Queue){
   _, name := path.Split(ep.URL.Path)
   mq = NewQueue(name, ep)
   return

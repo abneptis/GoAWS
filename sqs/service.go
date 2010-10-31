@@ -6,10 +6,11 @@ import "strconv"
 import "xml"
 //import "log"
 import "com.abneptis.oss/aws/auth"
-import "com.abneptis.oss/aws"
+//import "com.abneptis.oss/aws"
+import "com.abneptis.oss/aws/awsconn"
 
 type Service struct {
-  Endpoint *aws.Endpoint
+  Endpoint *awsconn.Endpoint
 }
 
 type createQueueResponse struct {
@@ -20,7 +21,7 @@ type createQueueResult struct {
   QueueUrl string
 }
 
-func NewService(ep *aws.Endpoint)(*Service){
+func NewService(ep *awsconn.Endpoint)(*Service){
   return &Service{Endpoint: ep}
 }
 
@@ -41,7 +42,7 @@ func (self *Service)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq *
       if err == nil {
         qrl, err := http.ParseURL(xresp.CreateQueueResult.QueueUrl)
         if err == nil {
-          ep := aws.NewEndpoint(qrl, self.Endpoint.ProxyURL)
+          ep := awsconn.NewEndpoint(qrl, self.Endpoint.ProxyURL)
           mq = NewQueueURL(ep)
         }
       }
@@ -85,7 +86,7 @@ func (self *Service)ListQueues(id auth.Signer, prefix string)(out []*Queue, err 
         for i := range(xresp.ListQueuesResult.QueueUrl){
           url, err := http.ParseURL(xresp.ListQueuesResult.QueueUrl[i])
           if err != nil { break }
-          ep := aws.NewEndpoint(url, self.Endpoint.ProxyURL)
+          ep := awsconn.NewEndpoint(url, self.Endpoint.ProxyURL)
           out[i] = NewQueueURL(ep)
         }
       }

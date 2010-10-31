@@ -1,6 +1,6 @@
 package main
 
-import "com.abneptis.oss/aws"
+import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/aws/sqs"
 import "com.abneptis.oss/aws/auth"
 
@@ -28,12 +28,12 @@ func GetProxyURL()(u *http.URL, err os.Error){
   return
 }
 
-func GetEndpoint()(ep *aws.Endpoint, err os.Error){
+func GetEndpoint()(ep *awsconn.Endpoint, err os.Error){
   purl, err := GetProxyURL()
   if err != nil { return }
   epurl, err := GetEndpointURL()
   if err != nil { return }
-  ep = aws.NewEndpoint(epurl, purl)
+  ep = awsconn.NewEndpoint(epurl, purl)
   return
 }
 
@@ -60,14 +60,14 @@ func GetQueue()(Q *sqs.Queue, err os.Error){
   if queueURL != nil && *queueURL != ""{
     qrl, err := http.ParseURL(*queueURL)
     if err == nil {
-      ep := aws.NewEndpoint(qrl, proxyURL)
+      ep := awsconn.NewEndpoint(qrl, proxyURL)
       Q = sqs.NewQueueURL(ep)
     }
   } else if queueName != nil && *queueName != "" {
     ep, err := http.ParseURL(*sqsEndpoint)
     if err == nil {
       //log.Printf("Parsed EP url: %v", ep)
-      ep := aws.NewEndpoint(ep, proxyURL)
+      ep := awsconn.NewEndpoint(ep, proxyURL)
       _sqs := sqs.NewService(ep)
       Q, err = _sqs.CreateQueue(id, *queueName, 90)
       //log.Printf("Q, QUrl, err: %p, %v", Q, err)

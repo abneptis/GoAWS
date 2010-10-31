@@ -11,7 +11,6 @@ import "os"
 import "hash"
 import "crypto/hmac"
 
-
 // An AWS identity (AccessKey/SecretKey)
 type Identity struct {
   accessKeyID []byte
