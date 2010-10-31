@@ -46,7 +46,7 @@ func (self RequestMap)Validate()(err os.Error){
 }
 
 /* 
-    Returns an error if the key is not allowed according
+  Returns an error if the key is not allowed according
   to the internal Allowed map, otherwise nil.
 */
 func (self RequestMap)ValidKey(key string)(err os.Error){
@@ -69,8 +69,9 @@ func (self RequestMap)Set(key string, value string)(err os.Error){
 }
 
 /*
-    Returns the keystring.
-    An error is only returned if the key name is invalid, NOT
+  Returns the keystring.
+
+  An error is only returned if the key name is invalid, NOT
   if the string is empty.
 */
 func (self RequestMap)Get(key string)(value string, err os.Error){
@@ -82,7 +83,7 @@ func (self RequestMap)Get(key string)(value string, err os.Error){
 }
 
 /*
-    Returns a bool indicating whether the key is currently
+  Returns a bool indicating whether the key is currently
   set.
 */
 func (self RequestMap)IsSet(key string)(out bool){
@@ -91,8 +92,10 @@ func (self RequestMap)IsSet(key string)(out bool){
 }
 
 /*
-    Converts a requestmap to a string;  Useful for canonicalization
-  of the request map to various AWS services.
+  Converts a requestmap to a string using the specified
+  seperators, escaping, and optional sorting by keys.  
+
+  Useful for canonicalization of the request map to various AWS services.
 */
 func (self RequestMap)ToString(kvsep, pairsep string, kesc, vesc func(string)(string), sorted bool)(string){
   eMap := maptools.StringStringEscape(self.Values, kesc, vesc)
