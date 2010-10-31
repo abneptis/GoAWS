@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=com.abneptis.oss/goaws/sqs
+TARG=com.abneptis.oss/aws/sqs
 GOFILES=service.go\
 	queue.go\
 	message.go\
