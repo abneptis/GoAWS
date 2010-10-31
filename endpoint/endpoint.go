@@ -1,4 +1,4 @@
-package goaws
+package aws
 
 import "com.abneptis.oss/urltools"
 

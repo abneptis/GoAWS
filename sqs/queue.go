@@ -1,7 +1,7 @@
 package sqs
 
-import "com.abneptis.oss/goaws"
-import "com.abneptis.oss/goaws/auth"
+import "com.abneptis.oss/aws"
+import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/uuid"
 import "bytes"
 import "os"
@@ -13,14 +13,14 @@ var MaxNumberOfMessages = 10
 
 type Queue struct {
   Name string
-  Endpoint *goaws.Endpoint
+  Endpoint *aws.Endpoint
 }
 
-func NewQueue(n string, ep *goaws.Endpoint)(*Queue){
+func NewQueue(n string, ep *aws.Endpoint)(*Queue){
   return &Queue{Name:n, Endpoint: ep}
 }
 
-func NewQueueURL(ep *goaws.Endpoint)(mq *Queue){
+func NewQueueURL(ep *aws.Endpoint)(mq *Queue){
   _, name := path.Split(ep.URL.Path)
   mq = NewQueue(name, ep)
   return

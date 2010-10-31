@@ -1,8 +1,8 @@
 package sqs
 
 import "com.abneptis.oss/cryptools/signer"
-import "com.abneptis.oss/goaws"
-import "com.abneptis.oss/goaws/auth"
+import "com.abneptis.oss/aws"
+import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/maptools"
 import "com.abneptis.oss/urltools"
 
@@ -34,8 +34,8 @@ func MakeHTTPRequest(url *http.URL, method string, params map[string]string)(req
 }
 
 
-func NewSQSRequest(params map[string]string)(out goaws.RequestMap, err os.Error){
-  out = goaws.RequestMap{
+func NewSQSRequest(params map[string]string)(out aws.RequestMap, err os.Error){
+  out = aws.RequestMap{
     Values: map[string]string{},
     Allowed: map[string]bool{
      "Action":true,
@@ -76,7 +76,7 @@ func NewSQSRequest(params map[string]string)(out goaws.RequestMap, err os.Error)
   }
   if ! out.IsSet("Expires") && ! out.IsSet("Timestamp") {
     t := time.LocalTime()
-    out.Set("Timestamp", t.Format(goaws.SQSTimestampFormat))
+    out.Set("Timestamp", t.Format(aws.SQSTimestampFormat))
   }
   return
 }
@@ -101,7 +101,7 @@ func sqsEscape(in string)(out string){
 
 
 
-func SignSQSRequest(id auth.Signer, m string, u *http.URL, in *goaws.RequestMap)(err os.Error){
+func SignSQSRequest(id auth.Signer, m string, u *http.URL, in *aws.RequestMap)(err os.Error){
   canonMap := maptools.StringStringEscape(in.Values, sqsEscape, sqsEscape)
   host := strings.Split(u.Host, ":", 2)
   canonString := fmt.Sprintf("%s\n%s\n%s\n%s", m, host[0], u.Path,
@@ -115,7 +115,7 @@ func SignSQSRequest(id auth.Signer, m string, u *http.URL, in *goaws.RequestMap)
 }
 
 
-func SignAndSendSQSRequest(id auth.Signer, method string, ep *goaws.Endpoint, in *goaws.RequestMap)(resp *http.Response, err os.Error){
+func SignAndSendSQSRequest(id auth.Signer, method string, ep *aws.Endpoint, in *aws.RequestMap)(resp *http.Response, err os.Error){
   err = SignSQSRequest(id, method, ep.URL, in)
   if err != nil { return }
   hreq := MakeHTTPRequest(ep.URL, method, in.Values)
@@ -124,6 +124,6 @@ func SignAndSendSQSRequest(id auth.Signer, method string, ep *goaws.Endpoint, in
   //os.Stderr.Write(bb)
   cc, err := ep.NewHTTPClientConn("tcp", "", nil)
   if err != nil && err != http.ErrPersistEOF { return }
-  resp, err = goaws.SendRequest(cc, hreq)
+  resp, err = aws.SendRequest(cc, hreq)
   return
 }

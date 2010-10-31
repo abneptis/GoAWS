@@ -1,7 +1,7 @@
 package main
 
-//import "com.abneptis.oss/goaws"
-//import "com.abneptis.oss/goaws/sqs"
+//import "com.abneptis.oss/aws"
+//import "com.abneptis.oss/aws/sqs"
 import "http"
 import "json"
 import "flag"

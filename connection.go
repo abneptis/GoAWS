@@ -1,4 +1,4 @@
-package goaws
+package aws
 /* 
   Copyright (c) 2010, Abneptis LLC.
   See COPYRIGHT and LICENSE for details.
