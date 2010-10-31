@@ -1,4 +1,4 @@
-package endpoint
+package goaws
 
 import "com.abneptis.oss/urltools"
 
