@@ -7,7 +7,9 @@ SQS:
   - (low) add ACL support
 
 S3:
-  - all
+  - refactor
+  - (med) add tests
+  - (low) ACL support
 
 Fps/Cobranded:
   - all

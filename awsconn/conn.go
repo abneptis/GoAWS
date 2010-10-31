@@ -20,6 +20,30 @@ import "http"
 import "net"
 import "os"
 import "bufio"
+import "xml"
+
+// Sends a request and returns an error
+// A simple helper exposed as it is often
+// useful.
+func SendRequest(cc *http.ClientConn, req *http.Request)(resp *http.Response, err os.Error){
+  err = cc.Write(req)
+  if err == nil {
+    resp, err = cc.Read()
+  }
+  return
+}
+
+// Handles xml unmarshalling to a generic object from
+// an http.Response
+func ParseResponse(resp *http.Response, o interface{})(err os.Error){
+  if resp.Body == nil {
+    err = os.NewError("Response body is empty")
+  } else {
+    parser := xml.NewParser(resp.Body)
+    err = parser.Unmarshal(o, nil)
+  }
+  return
+}
 
 // Construct a new Endpoint. 
 func NewEndpoint(u, pu *http.URL)(*Endpoint){

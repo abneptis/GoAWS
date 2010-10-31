@@ -73,7 +73,7 @@ func s3Escape(in string)(out string){
 
 func SignS3Request(id auth.Signer, url *http.URL, in *Request)(err os.Error){
   exp, nil := in.Params.Get("Expires")
-  canonString, _ := in.CanonicalQueryString("","", exp, map[string][]string{})
+  canonString, _ := in.CanonicalQueryString("","", exp)
   fmt.Printf("CanonString: [%s]\n", canonString)
   sig, err := signer.SignString64(id, base64.StdEncoding, canonString)
   if err == nil {
@@ -86,9 +86,8 @@ func (self *Request)CanonicalResource()(string){
   return path.Join("/", self.Bucket, self.Key)
 }
 
-func (self *Request)CanonicalQueryString(md5, ctype, expiry string, xheaders map[string][]string)(out string, err os.Error){
-  // TODO: actually handle the xheaders map.
-  out = strings.Join([]string{self.Method, self.ContentMD5, self.ContentType, expiry, ""+self.CanonicalResource()}, "\n")
+func (self *Request)CanonicalQueryString(md5, ctype, expiry string)(out string, err os.Error){
+  out = strings.Join([]string{self.Method, self.ContentMD5, self.ContentType, expiry, self.CanonicalResource()}, "\n")
   return
 }
 

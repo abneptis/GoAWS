@@ -124,6 +124,6 @@ func SignAndSendSQSRequest(id auth.Signer, method string, ep *awsconn.Endpoint, 
   //os.Stderr.Write(bb)
   cc, err := ep.NewHTTPClientConn("tcp", "", nil)
   if err != nil && err != http.ErrPersistEOF { return }
-  resp, err = aws.SendRequest(cc, hreq)
+  resp, err = awsconn.SendRequest(cc, hreq)
   return
 }
