@@ -25,7 +25,6 @@ func MakeHTTPRequest(url *http.URL, method string, params map[string]string)(req
     Host: url.Host,
     URL: url,
     Method: method,
-    Form: maptools.StringStringToStringStrings(params),
   }
   cmap := maptools.StringStringEscape(params, sqsEscape, sqsEscape)
 
