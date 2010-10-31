@@ -1,5 +1,6 @@
 package main
 
+import "com.abneptis.oss/goaws"
 import "com.abneptis.oss/goaws/sqs"
 import "com.abneptis.oss/goaws/auth"
 
@@ -27,12 +28,19 @@ func GetProxyURL()(u *http.URL, err os.Error){
   return
 }
 
-func GetEndpoint()(ep *sqs.Endpoint, err os.Error){
+func GetEndpoint()(ep *goaws.Endpoint, err os.Error){
   purl, err := GetProxyURL()
   if err != nil { return }
   epurl, err := GetEndpointURL()
   if err != nil { return }
-  ep = sqs.NewEndpoint(epurl, purl)
+  ep = goaws.NewEndpoint(epurl, purl)
+  return
+}
+
+func GetSQSService()(s *sqs.Service, err os.Error){
+  ep,err := GetEndpoint()
+  if err != nil { return }
+  s = sqs.NewService(ep)
   return
 }
 
@@ -52,14 +60,16 @@ func GetQueue()(Q *sqs.Queue, err os.Error){
   if queueURL != nil && *queueURL != ""{
     qrl, err := http.ParseURL(*queueURL)
     if err == nil {
-      Q = sqs.NewQueueURL(qrl, proxyURL)
+      ep := goaws.NewEndpoint(qrl, proxyURL)
+      Q = sqs.NewQueueURL(ep)
     }
   } else if queueName != nil && *queueName != "" {
     ep, err := http.ParseURL(*sqsEndpoint)
     if err == nil {
       //log.Printf("Parsed EP url: %v", ep)
-      ep := sqs.NewEndpoint(ep, proxyURL)
-      Q, err = ep.CreateQueue(id, *queueName, 90)
+      ep := goaws.NewEndpoint(ep, proxyURL)
+      _sqs := sqs.NewService(ep)
+      Q, err = _sqs.CreateQueue(id, *queueName, 90)
       //log.Printf("Q, QUrl, err: %p, %v", Q, err)
     }
   } else {

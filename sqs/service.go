@@ -6,17 +6,10 @@ import "strconv"
 import "xml"
 //import "log"
 import "com.abneptis.oss/goaws/auth"
+import "com.abneptis.oss/goaws"
 
-type Endpoint struct {
-  ProxyURL *http.URL
-  URL *http.URL
-}
-
-func NewEndpoint(u, pu *http.URL)(*Endpoint){
-  return &Endpoint {
-   URL: u,
-   ProxyURL: pu,
-  }
+type Service struct {
+  Endpoint *goaws.Endpoint
 }
 
 type createQueueResponse struct {
@@ -27,7 +20,11 @@ type createQueueResult struct {
   QueueUrl string
 }
 
-func (self *Endpoint)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq *Queue, err os.Error){
+func NewService(ep *goaws.Endpoint)(*Service){
+  return &Service{Endpoint: ep}
+}
+
+func (self *Service)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq *Queue, err os.Error){
   sqsReq, err := NewSQSRequest(map[string]string{
     "Action": "CreateQueue",
     "QueueName": name,
@@ -35,14 +32,18 @@ func (self *Endpoint)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq 
     "AWSAccessKeyId": string(id.PublicIdentity()),
   })
   if err != nil { return }
-  resp, err := SignAndSendSQSRequest(id, "GET", self.URL, self.ProxyURL, &sqsReq)
+  resp, err := SignAndSendSQSRequest(id, "GET", self.Endpoint, &sqsReq)
   if err == nil {
     if resp.StatusCode == 200 {
       parser := xml.NewParser(resp.Body)
       xresp := createQueueResponse{}
       err = parser.Unmarshal(&xresp, nil)
       if err == nil {
-        mq, err = NewQueueString(name, xresp.CreateQueueResult.QueueUrl, self.ProxyURL)
+        qrl, err := http.ParseURL(xresp.CreateQueueResult.QueueUrl)
+        if err == nil {
+          ep := goaws.NewEndpoint(qrl, self.Endpoint.ProxyURL)
+          mq = NewQueueURL(ep)
+        }
       }
     } else {
       err = os.NewError("Received unexpected status code" + resp.Status)
@@ -61,7 +62,7 @@ type listQueuesResult struct {
 }
 
 
-func (self *Endpoint)ListQueues(id auth.Signer, prefix string)(out []*Queue, err os.Error){
+func (self *Service)ListQueues(id auth.Signer, prefix string)(out []*Queue, err os.Error){
   sqsReq, err := NewSQSRequest(map[string]string{
     "Action": "ListQueues",
     "AWSAccessKeyId": string(id.PublicIdentity()),
@@ -71,7 +72,7 @@ func (self *Endpoint)ListQueues(id auth.Signer, prefix string)(out []*Queue, err
     err = sqsReq.Set("QueueNamePrefix", prefix)
   }
   if err != nil { return }
-  resp, err := SignAndSendSQSRequest(id, "GET", self.URL, self.ProxyURL, &sqsReq)
+  resp, err := SignAndSendSQSRequest(id, "GET", self.Endpoint, &sqsReq)
   if err == nil {
     if resp.StatusCode == 200 {
       //bb, err := http.DumpResponse(resp, true)
@@ -84,7 +85,8 @@ func (self *Endpoint)ListQueues(id auth.Signer, prefix string)(out []*Queue, err
         for i := range(xresp.ListQueuesResult.QueueUrl){
           url, err := http.ParseURL(xresp.ListQueuesResult.QueueUrl[i])
           if err != nil { break }
-          out[i] = NewQueueURL(url, self.ProxyURL)
+          ep := goaws.NewEndpoint(url, self.Endpoint.ProxyURL)
+          out[i] = NewQueueURL(ep)
         }
       }
     } else {

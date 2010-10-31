@@ -14,7 +14,7 @@ func main(){
   if err != nil {
     log.Exitf("Unable to get AWS identity: %v\n", err)
   }
-  ep, err := GetEndpoint()
+  ep, err := GetSQSService()
   if err != nil {
     log.Exitf("Unable to construct endpoint: %v\n", err)
   }
@@ -23,6 +23,6 @@ func main(){
     log.Exitf("Unable to list queues: %v\n", err)
   }
   for i := range(qs){
-    fmt.Printf("%s\t%s\n", qs[i].Name, qs[i].URL.String())
+    fmt.Printf("%s\t%s\n", qs[i].Name, qs[i].Endpoint.URL.String())
   }
 }

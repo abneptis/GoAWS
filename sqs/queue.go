@@ -1,9 +1,9 @@
 package sqs
 
+import "com.abneptis.oss/goaws"
 import "com.abneptis.oss/goaws/auth"
 import "com.abneptis.oss/uuid"
 import "bytes"
-import "http"
 import "os"
 import "path"
 import "strconv"
@@ -13,25 +13,16 @@ var MaxNumberOfMessages = 10
 
 type Queue struct {
   Name string
-  URL  *http.URL
-  ProxyURL  *http.URL
+  Endpoint *goaws.Endpoint
 }
 
-func NewQueue(n string, u *http.URL, pu *http.URL)(*Queue){
-  return &Queue{Name:n, URL: u, ProxyURL: pu}
+func NewQueue(n string, ep *goaws.Endpoint)(*Queue){
+  return &Queue{Name:n, Endpoint: ep}
 }
 
-func NewQueueURL(u *http.URL, pu *http.URL)(mq *Queue){
-  mq =  &Queue{URL: u, ProxyURL: pu}
-  _, mq.Name = path.Split(u.Path)
-  return
-}
-
-func NewQueueString(n string, u string, pu *http.URL)(q *Queue, err os.Error){
-  _u, err := http.ParseURL(u)
-  if err == nil {
-    q = NewQueue(n, _u, pu)
-  }
+func NewQueueURL(ep *goaws.Endpoint)(mq *Queue){
+  _, name := path.Split(ep.URL.Path)
+  mq = NewQueue(name, ep)
   return
 }
 
@@ -41,7 +32,7 @@ func (self *Queue)Delete(id auth.Signer)(err os.Error){
     "AWSAccessKeyId": string(id.PublicIdentity()),
   })
   if err != nil { return }
-  resp, err := SignAndSendSQSRequest(id, "GET", self.URL, self.ProxyURL, &sqsReq)
+  resp, err := SignAndSendSQSRequest(id, "GET", self.Endpoint, &sqsReq)
   if err == nil {
     if resp.StatusCode == 200 {
       parser := xml.NewParser(resp.Body)
@@ -72,7 +63,7 @@ func (self *Queue)Push(id auth.Signer, body []byte)(msgid *uuid.UUID, err os.Err
     "MessageBody": string(body),
   })
   if err != nil { return }
-  resp, err := SignAndSendSQSRequest(id, "GET", self.URL, self.ProxyURL, &sqsReq)
+  resp, err := SignAndSendSQSRequest(id, "GET", self.Endpoint, &sqsReq)
   //bb, _ := http.DumpResponse(resp, true)
   //os.Stdout.Write(bb)
   if err == nil {
@@ -114,7 +105,7 @@ func (self *Queue)FetchMessages(id auth.Signer, lim, timeout int)(m []*Message, 
     err = sqsReq.Set("VisibilityTimeout", strconv.Itoa(timeout))
     if err != nil { return }
   }
-  resp, err := SignAndSendSQSRequest(id, "GET", self.URL, self.ProxyURL, &sqsReq)
+  resp, err := SignAndSendSQSRequest(id, "GET", self.Endpoint, &sqsReq)
   //bb, _ := http.DumpResponse(resp, true)
   //os.Stdout.Write(bb)
   if err == nil {

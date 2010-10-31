@@ -115,14 +115,14 @@ func SignSQSRequest(id auth.Signer, m string, u *http.URL, in *goaws.RequestMap)
 }
 
 
-func SignAndSendSQSRequest(id auth.Signer, method string, u *http.URL, pu *http.URL, in *goaws.RequestMap)(resp *http.Response, err os.Error){
-  err = SignSQSRequest(id, method, u, in)
+func SignAndSendSQSRequest(id auth.Signer, method string, ep *goaws.Endpoint, in *goaws.RequestMap)(resp *http.Response, err os.Error){
+  err = SignSQSRequest(id, method, ep.URL, in)
   if err != nil { return }
-  hreq := MakeHTTPRequest(u, method, in.Values)
+  hreq := MakeHTTPRequest(ep.URL, method, in.Values)
   hreq.Close = true
   //bb, _ := http.DumpRequest(hreq, true)
   //os.Stderr.Write(bb)
-  cc, err := goaws.ClientConnection("tcp", "", u,pu, nil)
+  cc, err := ep.NewHTTPClientConn("tcp", "", nil)
   if err != nil && err != http.ErrPersistEOF { return }
   resp, err = goaws.SendRequest(cc, hreq)
   return

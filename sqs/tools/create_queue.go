@@ -14,5 +14,5 @@ func main(){
   if err != nil {
     log.Exitf("Couldn't create queue: %v\n", err)
   }
-  fmt.Printf("%v\n", q.URL)
+  fmt.Printf("%v\n", q.Endpoint.URL)
 }
