@@ -36,3 +36,24 @@ func (self *Bucket)Create(id auth.Signer)(err os.Error){
   os.Stdout.Write(bb)
   return
 }
+
+func (self *Bucket)Destroy(id auth.Signer)(err os.Error){
+  req := NewRequest("DELETE", self.Name, "", "", self.Endpoint, nil, 15)
+  req.Set("AWSAccessKeyId", auth.GetSignerIDString(id))
+  err = SignS3Request(id, self.Endpoint.GetURL(), req)
+  if err != nil {return}
+  hreq, err := req.HTTPRequest(id, self.Endpoint, self.Name,"")
+  if err != nil { return }
+
+  bb, _ := http.DumpRequest(hreq, true)
+  os.Stdout.Write(bb)
+
+  cconn, err := self.Endpoint.NewHTTPClientConn("tcp", "", nil)
+  if err != nil { return }
+  defer cconn.Close()
+  resp, err := awsconn.SendRequest(cconn, hreq)
+
+  bb, _ = http.DumpResponse(resp, true)
+  os.Stdout.Write(bb)
+  return
+}
