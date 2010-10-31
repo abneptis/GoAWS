@@ -1,0 +1,16 @@
+  All Abneptis LLC open-source go modules are built under the namespace
+"com.abneptis.oss".  Rather than prefix all of our module/function names
+with "Abneptis_", we've chosen to select an import namespace.
+  Should upstream Go modules conflict with our namespace in the future,
+we'll consider it a bug against us since the go language namepsace is still
+expanding rapidly.
+
+  Using namespaces rather than prefixes is for several reasons:
+   - Firstly, the user of a module will typically wrap our namespace in their
+own user functions, making our namespace choice (mostly) moot.
+   - Second, partly thanks to the first, users of the library can be assured
+that, barring substantial changes to go's import mechanism, using the fully
+qualified import will never be "incorrect".
+   - Third, changing the import namespace only requires changing the makefiles,
+and a half-dozen regexes, and the license is BSD, you can really just do
+whatever you want.
