@@ -50,6 +50,14 @@ func (self *Endpoint)ConnectionURL()(out *http.URL){
   return
 }
 
+// Return the URL to be used for request generation.
+// This is far more likely to be useful to end users
+// than the above.
+func (self *Endpoint)GetURL()(out *http.URL){
+  return self.URL
+}
+
+
 // Return a new net.Conn using netname and local as net.Dial does.
 // NewConn does not explicitly check to ensure that you are using
 // a stream protocol, so if you accept this from a user source, it
