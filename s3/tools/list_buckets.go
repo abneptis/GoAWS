@@ -6,7 +6,7 @@ package main
 import "com.abneptis.oss/aws/s3"
 //import "http"
 import "flag"
-//import "fmt"
+import "fmt"
 import "log"
 
 func main(){
@@ -19,5 +19,11 @@ func main(){
   if err != nil {
     log.Exitf("Unable to construct endpoint: %v\n", err)
   }
-  s3.ListBuckets(id, ep)
+  out, err := s3.ListBuckets(id, ep)
+  if err != nil {
+    log.Exitf("Unable to list buckets: %v\n", err)
+  }
+  for i := range(out){
+    fmt.Printf("%s\n", out[i])
+  }
 }
