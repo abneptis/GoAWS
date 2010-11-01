@@ -8,7 +8,6 @@ import "com.abneptis.oss/maptools"
 import "com.abneptis.oss/urltools"
 
 import "encoding/base64"
-//import "fmt"
 import "http"
 import "os"
 import "strings"
@@ -126,7 +125,6 @@ func (self *QueryRequest)Sign(id auth.Signer)(err os.Error){
   err = self.Parameters.Set("AWSAccessKeyId", string(id.PublicIdentity()))
   if err != nil { return }
   cs := self.CanonicalString()
-  //fmt.Printf("CanonString: [%s]\n", cs)
   sig, err := signer.SignString64(id, base64.StdEncoding, cs)
   if err == nil {
     err = self.Parameters.Set("Signature", sig)
@@ -155,7 +153,7 @@ func (self *QueryRequest)HTTPRequest()(req *http.Request){
   if self.Bucket != "" {
     req.URL.Path += self.Bucket
     if self.Key != "" {
-      req.URL.Path += self.Key
+      req.URL.Path += "/" + self.Key
     }
   }
   if self.ContentType != "" {

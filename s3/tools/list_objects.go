@@ -6,10 +6,8 @@ package main
 import "com.abneptis.oss/aws/s3"
 //import "http"
 import "flag"
-//import "fmt"
+import "fmt"
 import "log"
-import "io"
-import "os"
 
 func main(){
   flag.Parse()
@@ -22,9 +20,11 @@ func main(){
     log.Exitf("Unable to construct endpoint: %v", err)
   }
   bucket := s3.NewBucket(ep, flag.Arg(0))
-  o, err := bucket.GetKey(id, flag.Arg(1))
+  o, err := bucket.ListKeys(id,"","","",1000)
   if err != nil {
     log.Exitf("Couldn't get key: %v", err)
   }
-  io.Copy(os.Stdout,o.Body)
+  for i := range(o){
+    fmt.Printf("%s\n", o[i].Key)
+  }
 }
