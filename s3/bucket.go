@@ -24,6 +24,11 @@ func (self *Bucket)send(id auth.Signer, qr *QueryRequest)(resp *http.Response, e
   return qr.Send(id, self.Endpoint)
 }
 
+// Create a new bucket in S3.  Note that namespaces for S3 (unlike SQS)
+// are global in nature, so you may not conflict with another users bucket-name.
+//
+// Frequent good choices are dns names (forward or backwards: com.abneptis/foo or
+// abneptis.com/foo should be equally unique) or GUIDs.
 func (self *Bucket)Create(id auth.Signer)(err os.Error){
   qr, err := NewQueryRequest("PUT", self.Endpoint, self.Name, "", "", "", "", nil,
            map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
@@ -39,6 +44,8 @@ func (self *Bucket)Create(id auth.Signer)(err os.Error){
   return
 }
 
+// Destroys an S3 bucket.  It is NOT an error to delete a bucket with
+// contents.
 func (self *Bucket)Destroy(id auth.Signer)(err os.Error){
   qr, err := NewQueryRequest("DELETE", self.Endpoint, self.Name, "", "", "", "", nil,
            map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
@@ -53,6 +60,7 @@ func (self *Bucket)Destroy(id auth.Signer)(err os.Error){
   return
 }
 
+// Get an s3.Object with a ReadCloser for the body.
 func (self *Bucket)GetKey(id auth.Signer, key string)(obj *Object, err os.Error){
   qr, err := NewQueryRequest("GET", self.Endpoint, self.Name, key, "", "", "", nil,
            map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
@@ -114,6 +122,10 @@ type bucketResult struct {
   Owner bucketOwner
 }
 
+// Returns a list of Object pointers with the Name field set.
+//
+// Users should be aware that there is no Body in the objects returned
+// by ListKeys.
 func (self *Bucket)ListKeys(id auth.Signer, delim, marker, prefix string, max int)(out []*Object, err os.Error){
   qr, err := NewQueryRequest("GET", self.Endpoint, self.Name, "", "", "", "", nil,
            map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)

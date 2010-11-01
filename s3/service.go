@@ -1,3 +1,9 @@
+// Interface types and functions for Amazon's Simple Storage Service
+//
+// S3 uses an Bucket/Key tuple to store data in a user-defined format.
+//
+// The interface exposed will use readers/writers, and will likely need
+// to be wrapped in user serializers/deserializers.
 package s3
 
 import "com.abneptis.oss/aws/awsconn"
@@ -33,6 +39,8 @@ type bucketRecord struct {
   Name string
 }
 
+// Returns a list of bucket names known by the endpoint.  Depending on the 
+// endpoint used, your list may be global or regional in nature.
 func ListBuckets(id auth.Signer, ep *awsconn.Endpoint)(out []string, err os.Error){
   qr, err := NewQueryRequest("GET", ep, "", "", "", "", "", nil,
            map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
