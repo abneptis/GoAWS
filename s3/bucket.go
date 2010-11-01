@@ -16,44 +16,57 @@ func NewBucket(ep *awsconn.Endpoint, name string)(*Bucket){
   return &Bucket{Endpoint: ep, Name: name}
 }
 
-func (self *Bucket)Create(id auth.Signer)(err os.Error){
-  req := NewRequest("PUT", self.Name, "", "", self.Endpoint, nil, 15)
-  req.Set("AWSAccessKeyId", auth.GetSignerIDString(id))
-  err = SignS3Request(id, self.Endpoint.GetURL(), req)
+// Sign and send a low-level qury-request;  this includes formulating the
+// appropriate http request, creating a connection, sending the data, and
+// returning the ultimate http response.
+func (self *Bucket)send(id auth.Signer, qr *QueryRequest)(resp *http.Response, err os.Error){
+  qr.Sign(id)
   if err != nil {return}
-  hreq, err := req.HTTPRequest(id, self.Endpoint, self.Name,"")
-  if err != nil { return }
-
-  bb, _ := http.DumpRequest(hreq, true)
-  os.Stdout.Write(bb)
-
+  hreq := qr.HTTPRequest()
   cconn, err := self.Endpoint.NewHTTPClientConn("tcp", "", nil)
   if err != nil { return }
   defer cconn.Close()
-  resp, err := awsconn.SendRequest(cconn, hreq)
+  resp, err = awsconn.SendRequest(cconn, hreq)
+  return
+}
 
-  bb, _ = http.DumpResponse(resp, true)
-  os.Stdout.Write(bb)
+func (self *Bucket)Create(id auth.Signer)(err os.Error){
+  qr, err := NewQueryRequest("PUT", self.Endpoint, self.Name, "", "", "", "", nil,
+           map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
+  if err != nil { return }
+  resp, err := self.send(id, qr)
+  if resp.StatusCode != 200 {
+    s3err := &S3Error{}
+    err = awsconn.ParseResponse(resp, s3err)
+    if err == nil { err = s3err }
+    return
+  }
+
   return
 }
 
 func (self *Bucket)Destroy(id auth.Signer)(err os.Error){
-  req := NewRequest("DELETE", self.Name, "", "", self.Endpoint, nil, 15)
-  req.Set("AWSAccessKeyId", auth.GetSignerIDString(id))
-  err = SignS3Request(id, self.Endpoint.GetURL(), req)
-  if err != nil {return}
-  hreq, err := req.HTTPRequest(id, self.Endpoint, self.Name,"")
+  qr, err := NewQueryRequest("DELETE", self.Endpoint, self.Name, "", "", "", "", nil,
+           map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
   if err != nil { return }
+  resp, err := self.send(id, qr)
+  if resp.StatusCode != 204 {
+    s3err := &S3Error{}
+    err = awsconn.ParseResponse(resp, s3err)
+    if err == nil { err = s3err }
+    return
+  }
+  return
+}
 
-  bb, _ := http.DumpRequest(hreq, true)
-  os.Stdout.Write(bb)
-
-  cconn, err := self.Endpoint.NewHTTPClientConn("tcp", "", nil)
+func (self *Bucket)GetKey(id auth.Signer, key string)(obj *Object, err os.Error){
+  qr, err := NewQueryRequest("GET", self.Endpoint, self.Name, key, "", "", "", nil,
+           map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
   if err != nil { return }
-  defer cconn.Close()
-  resp, err := awsconn.SendRequest(cconn, hreq)
-
-  bb, _ = http.DumpResponse(resp, true)
-  os.Stdout.Write(bb)
+  resp, err := self.send(id, qr)
+  if err != nil { return }
+  if resp.StatusCode == 404 {
+    err = ErrorKeyNotFound
+  }
   return
 }
