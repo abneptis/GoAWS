@@ -102,11 +102,7 @@ func (self *Request)HTTPRequest(id auth.Signer, ep *awsconn.Endpoint, bucket, ke
     },
     Host: _url.Host,
   }
-  if key != "" {
-    req.URL.Path = path.Join("/", bucket)
-  } else {
-    req.URL.Path = path.Join("/", bucket, key)
-  }
+  req.URL.Path = path.Join("/", bucket, key)
   //err = SignS3Request(id, req.URL, self)
   //if err != nil {return}
   cmap := maptools.StringStringEscape(self.Params.Values, s3Escape, s3Escape)
