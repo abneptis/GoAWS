@@ -23,6 +23,6 @@ func main(){
   b := s3.NewBucket(ep, bucketName)
   err = b.Destroy(id)
   if err != nil {
-    log.Exitf("Unable to create bucket: %v\n", err)
+    log.Exitf("Unable to delete bucket: %v\n", err)
   }
 }
