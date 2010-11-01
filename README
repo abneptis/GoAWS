@@ -1,10 +1,10 @@
   After several revisions (read: rewrites), I finally have some AWS tools
 I'm happy with the form of.
 
-  Currently only SQS is supported, but s3 should exist shortly, with others
-coming as I implement them / patches arrive.
+  Some key functions are not yet implemented (SQS and S3 deletion, S3 ACL's,
+and others).
 
-  For quick usage examples of SQS, see sqs/tools/*.go.
+  For quick usage examples, see {s3,sqs}/tools/*.go.
 
   Please note, full compilation may depend on the following modules, also
 available at github:
