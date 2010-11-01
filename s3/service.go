@@ -5,13 +5,18 @@ import "com.abneptis.oss/aws/auth"
 //import "com.abneptis.oss/aws"
 
 import "os"
-//import "http"
 
-//<ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>19f48e038756359c402c774f40ea9b193668d906b8836c783823b9fd33b270ef</ID><DisplayName>amazon</DisplayName></Owner><Buckets><Bucket><Name>records.abneptis.com</Name><CreationDate>2010-10-31T18:51:43.000Z</CreationDate></Bucket><Bucket><Name>records.abneptis.net</Name><CreationDate>2010-10-31T18:51:56.000Z</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>
+//<ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+// <Owner><ID>19f48e038756359c402c774f40ea9b193668d906b8836c783823b9fd33b270ef</ID><DisplayName>amazon</DisplayName></Owner>
+// <Buckets>
+//  <Bucket><Name>records.abneptis.com</Name><CreationDate>2010-10-31T18:51:43.000Z</CreationDate></Bucket>
+//  <Bucket><Name>records.abneptis.net</Name><CreationDate>2010-10-31T18:51:56.000Z</CreationDate></Bucket>
+// </Buckets>
+//</ListAllMyBucketsResult>
 
 type listBucketsResult struct {
   Owner bucketOwner
-  Buckets []bucketResults
+  Buckets bucketResults
 }
 
 type bucketOwner struct {
@@ -20,7 +25,7 @@ type bucketOwner struct {
 }
 
 type bucketResults struct {
-  Bucket bucketRecord
+  Bucket []bucketRecord
 }
 
 type bucketRecord struct {
@@ -29,30 +34,21 @@ type bucketRecord struct {
 }
 
 func ListBuckets(id auth.Signer, ep *awsconn.Endpoint)(out []string, err os.Error){
-  req := NewRequest("GET", "", "", "", ep, nil, 15)
-  req.Set("AWSAccessKeyId", auth.GetSignerIDString(id))
-  err = SignS3Request(id, ep.GetURL(), req)
-  if err != nil {return}
-  hreq, err := req.HTTPRequest(id, ep, "","")
+  qr, err := NewQueryRequest("GET", ep, "", "", "", "", "", nil,
+           map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
   if err != nil { return }
-
-  //bb, _ := http.DumpRequest(hreq, true)
-  //os.Stdout.Write(bb)
-
-  cconn, err := ep.NewHTTPClientConn("tcp", "", nil)
+  resp, err := qr.Send(id, ep)
   if err != nil { return }
-  defer cconn.Close()
-  resp, err := awsconn.SendRequest(cconn, hreq)
-  if err != nil { return }
+  if resp.StatusCode == 404 {
+    err = ErrorKeyNotFound
+  }
   result := &listBucketsResult{}
   err = awsconn.ParseResponse(resp, result)
   if err != nil { return }
-  out = make([]string, len(result.Buckets))
-  for i := range(result.Buckets){
-    out[i] = result.Buckets[i].Bucket.Name
-  }
 
-  //bb, _ = http.DumpResponse(resp, true)
-  //os.Stdout.Write(bb)
+  out = make([]string, len(result.Buckets.Bucket))
+  for i := range(result.Buckets.Bucket){
+    out[i] = result.Buckets.Bucket[i].Name
+  }
   return
 }
