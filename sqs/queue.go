@@ -4,11 +4,14 @@ package sqs
 import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/uuid"
+import "com.abneptis.oss/maptools"
 import "bytes"
 import "os"
 import "path"
 import "strconv"
-import "xml"
+//import "xml"
+import "time"
+import "http"
 
 var MaxNumberOfMessages = 10
 
@@ -28,26 +31,27 @@ func NewQueueURL(ep *awsconn.Endpoint)(mq *Queue){
 }
 
 func (self *Queue)Delete(id auth.Signer)(err os.Error){
-  sqsReq, err := NewSQSRequest(map[string]string{
+  if self == nil || self.Endpoint == nil { return os.NewError("Undefined endpoint!") }
+  sqsReq, err := self.signedRequest(id, map[string]string{
     "Action": "DeleteQueue",
-    "AWSAccessKeyId": string(id.PublicIdentity()),
   })
   if err != nil { return }
-  resp, err := SignAndSendSQSRequest(id, "GET", self.Endpoint, &sqsReq)
-  if err == nil {
-    if resp.StatusCode == 200 {
-      parser := xml.NewParser(resp.Body)
-      xresp := createQueueResponse{}
-      err = parser.Unmarshal(&xresp, nil)
-    } else {
-      err = os.NewError("Received unexpected status: " + resp.Status)
-    }
-  }
+
+  xresp := &deleteQueueResponse{}
+  xerr := &Error{}
+  err = self.Endpoint.SendParsable(sqsReq, xresp, xerr)
+
+  if err != nil { return }
   return
+}
+
+type responseMetadata struct {
+  RequestId string
 }
 
 type sendMessageResponse struct {
   SendMessageResult  sendMessageResult
+  ResponseMetadata *responseMetadata
 }
 
 type sendMessageResult struct {
@@ -58,25 +62,17 @@ type sendMessageResult struct {
 
 // NB, we don't do any verification of the MD5
 func (self *Queue)Push(id auth.Signer, body []byte)(msgid *uuid.UUID, err os.Error){
-   sqsReq, err := NewSQSRequest(map[string]string{
+  sqsReq, err := self.signedRequest(id, map[string]string{
     "Action": "SendMessage",
-    "AWSAccessKeyId": string(id.PublicIdentity()),
     "MessageBody": string(body),
   })
   if err != nil { return }
-  resp, err := SignAndSendSQSRequest(id, "GET", self.Endpoint, &sqsReq)
-  //bb, _ := http.DumpResponse(resp, true)
-  //os.Stdout.Write(bb)
-  if err == nil {
-    if resp.StatusCode == 200 {
-      parser := xml.NewParser(resp.Body)
-      xresp := sendMessageResponse{}
-      err = parser.Unmarshal(&xresp, nil)
-      if err == nil { msgid, err = uuid.Parse(xresp.SendMessageResult.MessageId) }
-    } else {
-      err = os.NewError("Received unexpected status: " + resp.Status)
-    }
-  }
+
+  xresp := &sendMessageResponse{}
+  xerr := &errorResponse{}
+  err = self.Endpoint.SendParsable(sqsReq, xresp, xerr)
+  if err != nil { return }
+  msgid, err = uuid.Parse(xresp.SendMessageResult.MessageId)
   return
 }
 
@@ -87,6 +83,7 @@ func (self *Queue)PushString(id auth.Signer, body string)(*uuid.UUID, os.Error){
 
 type receiveMessageResponse struct {
   ReceiveMessageResult receiveMessageResult
+  ResponseMetadata *responseMetadata
 }
 
 type receiveMessageResult struct {
@@ -95,36 +92,62 @@ type receiveMessageResult struct {
 
 func (self *Queue)FetchMessages(id auth.Signer, lim, timeout int)(m []*Message, err os.Error){
   if lim <= 0 { lim = MaxNumberOfMessages }
-   sqsReq, err := NewSQSRequest(map[string]string{
+  sqsReq, err := self.signedRequest(id, map[string]string{
     "Action": "ReceiveMessage",
-    "AWSAccessKeyId": string(id.PublicIdentity()),
     "AttributeName": "All",
     "MaxNumberOfMessages": strconv.Itoa(lim),
   })
   if err != nil { return }
-  if timeout >= 0 {
-    err = sqsReq.Set("VisibilityTimeout", strconv.Itoa(timeout))
-    if err != nil { return }
-  }
-  resp, err := SignAndSendSQSRequest(id, "GET", self.Endpoint, &sqsReq)
-  //bb, _ := http.DumpResponse(resp, true)
-  //os.Stdout.Write(bb)
-  if err == nil {
-    if resp.StatusCode == 200 {
-      parser := xml.NewParser(resp.Body)
-      xresp := receiveMessageResponse{}
-      err = parser.Unmarshal(&xresp, nil)
-      if err == nil {
-        m = make([]*Message, len(xresp.ReceiveMessageResult.Message))
-        for mi := range(xresp.ReceiveMessageResult.Message) {
-          m[mi], err = xresp.ReceiveMessageResult.Message[mi].Message()
-          if err != nil { break }
-        }
-      }
-    } else {
-      err = os.NewError("Received unexpected status: " + resp.Status)
-    }
+  xresp := &receiveMessageResponse{}
+  xerr := &errorResponse{}
+  err = self.Endpoint.SendParsable(sqsReq, xresp, xerr)
+  if err != nil { return }
+  m = make([]*Message, len(xresp.ReceiveMessageResult.Message))
+  for mi := range(xresp.ReceiveMessageResult.Message) {
+    m[mi], err = xresp.ReceiveMessageResult.Message[mi].Message()
+    if err != nil { break }
   }
   return
 }
 
+type deleteMessageResponse struct {
+  ResponseMetadata responseMetadata
+}
+
+type deleteQueueResponse struct {
+  ResponseMetadata responseMetadata
+}
+
+func (self *Queue)DeleteMessage(id auth.Signer, m *Message)(err os.Error){
+  sqsReq, err := self.signedRequest(id, map[string]string{
+    "Action": "DeleteMessage",
+    "ReceiptHandle": m.ReceiptHandle,
+  })
+  if err != nil { return }
+
+  xresp := &deleteMessageResponse{}
+  xerr := &Error{}
+  err = self.Endpoint.SendParsable(sqsReq, xresp, xerr)
+
+  if err != nil { return }
+  return
+}
+
+func (self *Queue)signedRequest(id auth.Signer, params map[string]string)(req *http.Request, err os.Error){
+  req = self.Endpoint.NewHTTPRequest("GET", self.Endpoint.GetURL().Path, maptools.StringStringToStringStrings(params), nil)
+  req.Form["AWSAccessKeyId"] = []string{auth.GetSignerIDString(id)}
+  if len(req.Form["Version"]) == 0 {
+    req.Form["Version"] = []string{DefaultSQSVersion}
+  }
+  if len(req.Form["SignatureMethod"]) == 0 {
+    req.Form["SignatureMethod"] = []string{DefaultSignatureMethod}
+  }
+  if len(req.Form["SignatureVersion"]) == 0 {
+    req.Form["SignatureVersion"] = []string{DefaultSignatureVersion}
+  }
+  if len(req.Form["Expires"]) == 0 && len(req.Form["Timestamp"]) == 0{
+    req.Form["Timestamp"] = []string{ strconv.Itoa64(time.Seconds()) }
+  }
+  err = SignRequest(id, req)
+  return
+}

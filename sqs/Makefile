@@ -5,6 +5,7 @@ GOFILES=service.go\
 	queue.go\
 	message.go\
 	request.go\
+	error.go\
 
 include $(GOROOT)/src/Make.pkg
 
