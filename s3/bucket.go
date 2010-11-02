@@ -4,6 +4,7 @@ import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/aws/auth"
 //import "com.abneptis.oss/aws"
 
+import "io"
 import "os"
 import "strconv"
 
@@ -75,31 +76,43 @@ func (self *Bucket)GetKey(id auth.Signer, key string)(obj *Object, err os.Error)
   }
   return
 }
-/*
-<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
- <Name>records.abneptis.net</Name>
- <Prefix></Prefix>
- <Marker></Marker>
- <MaxKeys>1000</MaxKeys>
- <IsTruncated>false</IsTruncated>
- <Contents>
-  <Key>accounts/9v_eecx0HuSb_-hkT0Qp_es0_rt_KSYEZXZsLi8ZF1uXkjSXGI_DnT1DM1_IcJG09FKQyiFHI-GjvZQ18RKSJA==/vP9j8c-NCFc0WLyMi12jDrIyhJW4jJXR2wAfhoHa6aN_i0N363D0euzBhB9CLfXlgeTk98Drx0gTk7JSvgQ8tQ==</Key>
-  <LastModified>2010-10-17T23:51:53.000Z</LastModified>
-  <ETag>&quot;c3d9e26b5b9ec3b7933ad622a716d25c&quot;</ETag>
-  <Size>76</Size>
-  <Owner><ID>19f48e038756359c402c774f40ea9b193668d906b8836c783823b9fd33b270ef</ID><DisplayName>amazon</DisplayName></Owner>
-  <StorageClass>STANDARD</StorageClass>
- </Contents>
- <Contents>
-  <Key>test-key</Key>
-  <LastModified>2010-10-17T22:32:09.000Z</LastModified>
-  <ETag>&quot;08ff08d3b2981eb6c611a385ffa4f865&quot;</ETag>
-  <Size>11</Size>
-  <Owner><ID>19f48e038756359c402c774f40ea9b193668d906b8836c783823b9fd33b270ef</ID><DisplayName>amazon</DisplayName></Owner>
-  <StorageClass>STANDARD</StorageClass>
- </Contents>
-</ListBucketResult>
-*/
+
+// Delete an S3 Key.
+func (self *Bucket)DeleteKey(id auth.Signer, key string)(err os.Error){
+  hreq, err := NewQueryRequest(id, self.Endpoint, "DELETE", self.Name,key,"","", nil, nil)
+  if err != nil { return }
+  resp, err := self.Endpoint.SendRequest(hreq)
+  if err != nil { return }
+  switch resp.StatusCode {
+    case 403:
+      err = ErrorAccessDenied
+    case 404:
+      err = ErrorKeyNotFound
+    case 204:
+    default:
+      err = os.NewError("Unhandled response code: " + resp.Status )
+  }
+  return
+}
+
+// Write S3 Key.
+func (self *Bucket)PutKey(id auth.Signer, key, ctype, cmd5 string, llen int64, rc io.ReadCloser)(err os.Error){
+  hreq, err := NewQueryRequest(id, self.Endpoint, "PUT", self.Name,key,ctype,cmd5, nil, nil)
+  hreq.ContentLength = llen
+  hreq.Body = rc
+  if err != nil { return }
+  resp, err := self.Endpoint.SendRequest(hreq)
+  if err != nil { return }
+  switch resp.StatusCode {
+    case 403:
+      err = ErrorAccessDenied
+    case 200:
+    default:
+      err = os.NewError("Unhandled response code: " + resp.Status )
+  }
+  return
+}
+
 
 type listBucketResult struct {
   Name string
