@@ -6,6 +6,7 @@ GOFILES=service.go\
 	message.go\
 	request.go\
 	error.go\
+	sqs_types.go\
 
 include $(GOROOT)/src/Make.pkg
 

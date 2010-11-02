@@ -28,14 +28,6 @@ type Service struct {
   Endpoint *awsconn.Endpoint
 }
 
-type createQueueResponse struct {
-  CreateQueueResult createQueueResult
-}
-
-type createQueueResult struct {
-  QueueUrl string
-}
-
 func NewService(ep *awsconn.Endpoint)(*Service){
   return &Service{Endpoint: ep}
 }
@@ -97,15 +89,6 @@ func (self *Service)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq *
   ep := awsconn.NewEndpoint(qrl, self.Endpoint.ProxyURL)
   mq = NewQueueURL(ep)
   return
-}
-
-
-type listQueuesResponse struct {
-  ListQueuesResult listQueuesResult
-}
-
-type listQueuesResult struct {
-  QueueUrl []string
 }
 
 func (self *Service)ListQueues(id auth.Signer, prefix string)(out []*Queue, err os.Error){

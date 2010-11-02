@@ -45,21 +45,6 @@ func (self *Queue)Delete(id auth.Signer)(err os.Error){
   return
 }
 
-type responseMetadata struct {
-  RequestId string
-}
-
-type sendMessageResponse struct {
-  SendMessageResult  sendMessageResult
-  ResponseMetadata *responseMetadata
-}
-
-type sendMessageResult struct {
-  MD5OfMessageBody string
-  MessageId string
-}
-
-
 // NB, we don't do any verification of the MD5
 func (self *Queue)Push(id auth.Signer, body []byte)(msgid *uuid.UUID, err os.Error){
   sqsReq, err := self.signedRequest(id, map[string]string{
@@ -79,15 +64,6 @@ func (self *Queue)Push(id auth.Signer, body []byte)(msgid *uuid.UUID, err os.Err
 func (self *Queue)PushString(id auth.Signer, body string)(*uuid.UUID, os.Error){
   buff := bytes.NewBufferString(body)
   return self.Push(id, buff.Bytes())
-}
-
-type receiveMessageResponse struct {
-  ReceiveMessageResult receiveMessageResult
-  ResponseMetadata *responseMetadata
-}
-
-type receiveMessageResult struct {
-  Message []*rawMessage
 }
 
 func (self *Queue)FetchMessages(id auth.Signer, lim, timeout int)(m []*Message, err os.Error){
@@ -110,13 +86,6 @@ func (self *Queue)FetchMessages(id auth.Signer, lim, timeout int)(m []*Message, 
   return
 }
 
-type deleteMessageResponse struct {
-  ResponseMetadata responseMetadata
-}
-
-type deleteQueueResponse struct {
-  ResponseMetadata responseMetadata
-}
 
 func (self *Queue)DeleteMessage(id auth.Signer, m *Message)(err os.Error){
   sqsReq, err := self.signedRequest(id, map[string]string{
