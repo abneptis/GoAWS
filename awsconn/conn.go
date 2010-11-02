@@ -120,13 +120,15 @@ func (self *Endpoint)NewHTTPClientConn(netname, local string, r *bufio.Reader)(h
   return
 }
 
-
-func (self *Endpoint)SendParsable(req *http.Request, out interface{}, etype os.Error)(err os.Error){
+func (self *Endpoint)SendRequest(req *http.Request)(resp *http.Response, err os.Error){
   cc,err := self.NewHTTPClientConn("tcp", "", nil)
   if err != nil { return }
   defer cc.Close()
+  return SendRequest(cc, req)
+}
 
-  resp, err := SendRequest(cc, req)
+func (self *Endpoint)SendParsable(req *http.Request, out interface{}, etype os.Error)(err os.Error){
+  resp, err := self.SendRequest(req)
   if err != nil { return }
   if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
    err = ParseResponse(resp, out)
