@@ -1,13 +1,9 @@
 SQS:
-  - (highest) Message deletion
-  - (high) clean up AWS errors
-  - (med) fix spurious crashes on AWS errors (recent fmt on Nil *http.URL?)
   - (med) add tests
   - (med) add SSL support
   - (low) add ACL support
 
 S3:
-  - refactor
   - (med) add tests
   - (low) ACL support
 
