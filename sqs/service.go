@@ -19,8 +19,8 @@ import "strings"
 import "time"
 
 var DefaultSQSVersion = "2009-02-01"
-//var DefaultSignatureVersion = "2"
-//var DefaultSignatureMethod = "HmacSHA256"
+var DefaultSignatureVersion = "2"
+var DefaultSignatureMethod = "HmacSHA256"
 
 
 

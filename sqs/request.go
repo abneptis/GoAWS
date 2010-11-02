@@ -2,10 +2,6 @@ package sqs
 
 import "com.abneptis.oss/urltools"
 
-var DefaultVersion = "2009-02-01"
-var DefaultSignatureVersion = "2"
-var DefaultSignatureMethod = "HmacSHA256"
-
 func sqsEscapeTest(i byte)(out bool){
   switch i {
     case 'a','b','c','d','e','f','g','h','i','j','k','l','m',
