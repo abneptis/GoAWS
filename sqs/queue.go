@@ -13,8 +13,11 @@ import "strconv"
 import "time"
 import "http"
 
+// Default number of messages to request per Fetch()
 var MaxNumberOfMessages = 10
 
+// An SQS queue object.  The endpoint in this case
+// represents the full path to the SQS service (push, pop, etc).
 type Queue struct {
   Name string
   Endpoint *awsconn.Endpoint

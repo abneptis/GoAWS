@@ -23,7 +23,9 @@ var DefaultSignatureVersion = "2"
 var DefaultSignatureMethod = "HmacSHA256"
 
 
-
+// Services represents an SQS endpoint;
+// Only SQS service endpoints (and not SQS queues) are eligible for functions
+// such as CreateQueue.
 type Service struct {
   Endpoint *awsconn.Endpoint
 }
