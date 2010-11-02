@@ -42,16 +42,13 @@ type bucketRecord struct {
 // Returns a list of bucket names known by the endpoint.  Depending on the 
 // endpoint used, your list may be global or regional in nature.
 func ListBuckets(id auth.Signer, ep *awsconn.Endpoint)(out []string, err os.Error){
-  qr, err := NewQueryRequest("GET", ep, "", "", "", "", "", nil,
-           map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
+  hreq, err := NewQueryRequest(id, ep, "GET", "","","","", nil, nil)
   if err != nil { return }
-  resp, err := qr.Send(id, ep)
-  if err != nil { return }
-  if resp.StatusCode == 404 {
-    err = ErrorKeyNotFound
-  }
+
   result := &listBucketsResult{}
-  err = awsconn.ParseResponse(resp, result)
+  etype := &errorResponse{}
+  err = ep.SendParsable(hreq, result, etype)
+
   if err != nil { return }
 
   out = make([]string, len(result.Buckets.Bucket))

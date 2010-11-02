@@ -2,16 +2,15 @@ package s3
 
 import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/aws/auth"
-import "com.abneptis.oss/aws"
 import "com.abneptis.oss/cryptools/signer"
-import "com.abneptis.oss/maptools"
 import "com.abneptis.oss/urltools"
+import "com.abneptis.oss/maptools"
 
 import "encoding/base64"
 import "http"
 import "os"
-import "strings"
 import "strconv"
+import "strings"
 import "time"
 
 
@@ -35,29 +34,6 @@ func s3Escape(in string)(out string){
 
 
 
-type QueryRequest struct {
-  Method string
-  Endpoint *awsconn.Endpoint
-  AmzHeaders   map[string]string
-  Parameters   *aws.RequestMap
-  Flag  string
-  Bucket string
-  Key    string
-  ContentType string
-  ContentMD5  string
-}
-
-func queryParamsMap()(*aws.RequestMap){
-  return &aws.RequestMap{
-    Allowed: map[string]bool{
-      "Signature": true,
-      "AWSAccessKeyId": true,
-      "Expires": true,
-    },
-    Values: map[string]string{},
-  }
-}
-
 // Constructs a query request object;  This complex type implements
 // both the Canonicalization and Signing methods necessary to access
 // S3.
@@ -67,123 +43,46 @@ func queryParamsMap()(*aws.RequestMap){
 //
 // If Expiration is < 1 year (in seconds), the expiration is assumed to
 // mean seconds-from-now (local clock based).
-func NewQueryRequest(method string, endpoint *awsconn.Endpoint,
-                     bucket, key, flag, ctype, cmd5 string,
-                    amz, params map[string]string,
-                    expiration int64)(qr *QueryRequest, err os.Error){
-  qr = &QueryRequest{
-    Method: method,
-    Endpoint: endpoint,
-    Flag: flag, Bucket: bucket, Key: key,
-    ContentType: ctype, ContentMD5: cmd5,
-    Parameters: queryParamsMap(),
-  }
-
-  if amz == nil {
-    qr.AmzHeaders = make(map[string]string)
-  } else {
-    qr.AmzHeaders = amz
-  }
-
-  qr.Parameters = queryParamsMap()
-  for k, v := range(amz){
-    err = qr.Parameters.Set(k,v)
-  }
-  if expiration < (365*24*60*60) {
-    expiration += time.Seconds()
-  }
-  qr.Parameters.Set("Expires", strconv.Itoa64(expiration))
-  return
-}
-
-func (self *QueryRequest)canonHeaders()(out string){
-  for k, v := range(self.AmzHeaders) {
-    out += strings.ToLower(k) + "=" + v + "\n"
-  }
-  return
-}
-
-func (self *QueryRequest)canonResource()(out string){
-  // TODO: Escape key(?)
-  // TODO: Handle Flag(? is that part of canon?)
-  out += "/" + self.Bucket
-  if self.Key != "" {
-    out += "/" + self.Key
-  }
-  return
-}
-
-func (self *QueryRequest)CanonicalString()(out string){
-  exp, _ := self.Parameters.Get("Expires")
-  out = strings.Join([]string{self.Method, self.ContentMD5, self.ContentType,
-                     exp,
-                     self.canonHeaders() + self.canonResource()}, "\n")
-  return
-}
-
-func (self *QueryRequest)Sign(id auth.Signer)(err os.Error){
-  err = self.Parameters.Set("AWSAccessKeyId", string(id.PublicIdentity()))
-  if err != nil { return }
-  cs := self.CanonicalString()
-  sig, err := signer.SignString64(id, base64.StdEncoding, cs)
-  if err == nil {
-    err = self.Parameters.Set("Signature", sig)
-  }
-  return
-}
-
-func (self *QueryRequest)IsVhosted()(bool){
-  if self.Endpoint.GetURL().Host == self.Bucket ||
-     self.Endpoint.GetURL().Host == self.Bucket + ".s3.amazonaws.com" {
-    return true
-  }
-  return false
-}
-
-func (self *QueryRequest)HTTPRequest()(req *http.Request){
+func NewQueryRequest(id auth.Signer, endpoint *awsconn.Endpoint,
+                     method, bucket, key, ctype, cmd5 string,
+                     params, hdrs map[string]string)(req *http.Request, err os.Error){
   req = &http.Request {
-    Method: self.Method,
+    Method: method,
+    Host: endpoint.GetURL().Host,
     URL: &http.URL {
-      Scheme: self.Endpoint.GetURL().Scheme,
-      Host: self.Endpoint.GetURL().Host,
-      Path: "/",
+      Scheme: endpoint.GetURL().Scheme,
+      Host: endpoint.GetURL().Host,
+      Path: endpoint.GetURL().Path,
     },
-    Header: map[string]string{},
+    Header: hdrs,
+    Form: maptools.StringStringToStringStrings(params),
   }
-  if self.Bucket != "" {
-    req.URL.Path += self.Bucket
-    if self.Key != "" {
-      req.URL.Path += "/" + self.Key
+  if req.Header == nil { req.Header = make(map[string]string) }
+  if ctype != "" { req.Header["Content-Type"] = ctype }
+  if cmd5  != "" { req.Header["Content-Md5"] = cmd5}
+  if bucket != "" {
+    req.URL.Path = "/" + bucket
+    if key != "" {
+      req.URL.Path += "/" + key
     }
   }
-  if self.ContentType != "" {
-    req.Header["Content-Type"] = self.ContentType
+  req.Form["AWSAccessKeyId"] = []string{auth.GetSignerIDString(id)}
+  if len(req.Form["Expires"]) == 0 {
+    req.Form["Expires"] = []string{strconv.Itoa64(time.Seconds() + 30)}
   }
-  if self.ContentMD5 != "" {
-    // is Case correct?
-    req.Header["Content-Md5"] = self.ContentMD5
+  if len(req.Form["Signature"]) == 0 {
+    sig, err := signer.SignString64(id, base64.StdEncoding, CanonicalString(req))
+    if err != nil { return }
+    req.Form["Signature"] = []string{sig}
   }
-  if self.Flag != "" {
-    req.URL.RawQuery = self.Flag + "&"
-  }
-  if len(req.URL.RawQuery) > 0 { req.URL.RawQuery += "&" }
-  cmap := maptools.StringStringEscape(self.Parameters.Values, s3Escape, s3Escape)
-  req.URL.RawQuery += maptools.StringStringJoin(cmap, "=", "&", true)
   return
 }
 
-
-// Sign and send a low-level qury-request;  this includes formulating the
-// appropriate http request, creating a connection, sending the data, and
-// returning the ultimate http response.
-func (self *QueryRequest)Send(id auth.Signer, ep *awsconn.Endpoint)(resp *http.Response, err os.Error){
-  self.Sign(id)
-  if err != nil {return}
-  hreq := self.HTTPRequest()
-  cconn, err := ep.NewHTTPClientConn("tcp", "", nil)
-  if err != nil { return }
-  defer cconn.Close()
-  resp, err = awsconn.SendRequest(cconn, hreq)
-  return
+func CanonicalString(req *http.Request)(string){
+  return strings.Join([]string{
+    req.Method,
+    awsconn.ContentMD5(req),
+    awsconn.ContentType(req),
+    req.Form["Expires"][0], "" + req.URL.Path,
+  }, "\n")
 }
-

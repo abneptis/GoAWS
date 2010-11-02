@@ -5,7 +5,6 @@ import "com.abneptis.oss/aws/auth"
 //import "com.abneptis.oss/aws"
 
 import "os"
-import "http"
 import "strconv"
 
 type Bucket struct {
@@ -17,55 +16,52 @@ func NewBucket(ep *awsconn.Endpoint, name string)(*Bucket){
   return &Bucket{Endpoint: ep, Name: name}
 }
 
-// Sign and send a low-level qury-request;  this includes formulating the
-// appropriate http request, creating a connection, sending the data, and
-// returning the ultimate http response.
-func (self *Bucket)send(id auth.Signer, qr *QueryRequest)(resp *http.Response, err os.Error){
-  return qr.Send(id, self.Endpoint)
-}
-
 // Create a new bucket in S3.  Note that namespaces for S3 (unlike SQS)
 // are global in nature, so you may not conflict with another users bucket-name.
 //
 // Frequent good choices are dns names (forward or backwards: com.abneptis/foo or
 // abneptis.com/foo should be equally unique) or GUIDs.
-func (self *Bucket)Create(id auth.Signer)(err os.Error){
-  qr, err := NewQueryRequest("PUT", self.Endpoint, self.Name, "", "", "", "", nil,
-           map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
-  if err != nil { return }
-  resp, err := self.send(id, qr)
-  if resp.StatusCode != 200 {
-    s3err := &S3Error{}
-    err = awsconn.ParseResponse(resp, s3err)
-    if err == nil { err = s3err }
-    return
-  }
+type createBucketResponse struct {
+  CreateBucketResponse bucketList
+}
 
+type bucketList struct {
+  Bucket []string
+}
+
+func (self *Bucket)Create(id auth.Signer)(err os.Error){
+  hreq, err := NewQueryRequest(id, self.Endpoint, "PUT", self.Name,"","","", nil, nil)
+  if err != nil { return }
+  resp, err := self.Endpoint.SendRequest(hreq)
+  if err != nil { return }
+  if resp.StatusCode != 200 {
+    err = os.NewError("Unable to create: " + resp.Status)
+  }
   return
 }
+
 
 // Destroys an S3 bucket.  It is NOT an error to delete a bucket with
 // contents.
 func (self *Bucket)Destroy(id auth.Signer)(err os.Error){
-  qr, err := NewQueryRequest("DELETE", self.Endpoint, self.Name, "", "", "", "", nil,
-           map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
+  hreq, err := NewQueryRequest(id, self.Endpoint, "DELETE", self.Name,"","","", nil, nil)
   if err != nil { return }
-  resp, err := self.send(id, qr)
+  resp, err := self.Endpoint.SendRequest(hreq)
+  if err != nil { return }
   if resp.StatusCode != 204 {
-    s3err := &S3Error{}
-    err = awsconn.ParseResponse(resp, s3err)
-    if err == nil { err = s3err }
-    return
+    err = os.NewError(resp.Status)
   }
   return
 }
 
 // Get an s3.Object with a ReadCloser for the body.
 func (self *Bucket)GetKey(id auth.Signer, key string)(obj *Object, err os.Error){
-  qr, err := NewQueryRequest("GET", self.Endpoint, self.Name, key, "", "", "", nil,
-           map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
+  hreq, err := NewQueryRequest(id, self.Endpoint, "GET", self.Name,key,"","", nil, nil)
   if err != nil { return }
-  resp, err := self.send(id, qr)
+  cc, err := self.Endpoint.NewHTTPClientConn("tcp","", nil)
+  if err != nil { return }
+  defer cc.Close()
+  resp, err := awsconn.SendRequest(cc, hreq)
   if err != nil { return }
   switch resp.StatusCode {
     case 403:
@@ -127,40 +123,25 @@ type bucketResult struct {
 // Users should be aware that there is no Body in the objects returned
 // by ListKeys.
 func (self *Bucket)ListKeys(id auth.Signer, delim, marker, prefix string, max int)(out []*Object, err os.Error){
-  qr, err := NewQueryRequest("GET", self.Endpoint, self.Name, "", "", "", "", nil,
-           map[string]string{"AWSAccessKeyId": auth.GetSignerIDString(id)}, 15)
+  hreq, err := NewQueryRequest(id, self.Endpoint, "GET", self.Name,"","","", nil, nil)
   if err != nil { return }
   if delim != "" {
-    err = qr.Parameters.Set("delimiter", delim)
-    if err != nil { return }
+    hreq.Form["delimiter"] = []string{delim}
   }
   if marker != "" {
-    err = qr.Parameters.Set("marker", marker)
-    if err != nil { return }
+    hreq.Form["marker"] = []string{marker}
   }
   if prefix != "" {
-    err = qr.Parameters.Set("prefix", marker)
-    if err != nil { return }
+    hreq.Form["prefix"] = []string{prefix}
   }
-  qr.Parameters.Set("max-keys", strconv.Itoa(max))
-  resp, err := self.send(id, qr)
+  hreq.Form["max-keys"] =  []string{strconv.Itoa(max)}
+  etype := &errorResponse{}
+  obj := &listBucketResult{}
+  err = self.Endpoint.SendParsable(hreq, obj, etype)
   if err != nil { return }
-  switch resp.StatusCode {
-    case 404:
-      err = ErrorKeyNotFound
-    case 200:
-      obj := &listBucketResult{}
-      err = awsconn.ParseResponse(resp, obj)
-      out = make([]*Object, len(obj.Contents))
-      if err == nil {
-        for i := range(obj.Contents){
-          out[i] = &Object{Key: obj.Contents[i].Key}
-        }
-      }
-    default:
-      s3err := &S3Error{}
-      err = awsconn.ParseResponse(resp, s3err)
-      if err == nil { err = s3err }
+  out = make([]*Object, len(obj.Contents))
+  for i := range(obj.Contents){
+    out[i] = &Object{Key: obj.Contents[i].Key}
   }
   return
 }
