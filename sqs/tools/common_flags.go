@@ -15,7 +15,7 @@ import "com.abneptis.oss/aws/auth"
 import "flag"
 import "http"
 import "os"
-//import "log"
+import "log"
 
 
 var secretKeyId = flag.String("secret-key","","Secret key ID")
@@ -74,11 +74,11 @@ func GetQueue()(Q *sqs.Queue, err os.Error){
   } else if queueName != nil && *queueName != "" {
     ep, err := http.ParseURL(*sqsEndpoint)
     if err == nil {
-      //log.Printf("Parsed EP url: %v", ep)
+      log.Printf("Parsed EP url: %v", ep)
       ep := awsconn.NewEndpoint(ep, proxyURL)
       _sqs := sqs.NewService(ep)
       Q, err = _sqs.CreateQueue(id, *queueName, 90)
-      //log.Printf("Q, QUrl, err: %p, %v", Q, err)
+      log.Printf("Q, err: [%p, %v]", Q, err)
     }
   } else {
     err = os.NewError("Either Queue(+Endpoint) or QueueURL are required")

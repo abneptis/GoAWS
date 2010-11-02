@@ -30,6 +30,11 @@ func main(){
   log.Printf("#[%d messages received]", len(msgs))
   _form := *outform
   for mi := range(msgs) {
+    err = q.DeleteMessage(id, msgs[mi])
+    if err != nil {
+      log.Printf("Couldn't delete message, not displaying (%v)", err)
+      continue
+    }
     switch _form {
       case "text":
         fmt.Printf("MessageID\t%s\n", msgs[mi].MessageId.String())
