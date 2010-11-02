@@ -3,12 +3,17 @@ package sqs
 // This file contains nominal structures to make XML parsing
 // easier.  They should almost never be used directly.
 
+// All responses will contain a responseMetadata
+
 type responseMetadata struct {
   RequestId string
 }
 
+/* Outer response types */
+
 type createQueueResponse struct {
   CreateQueueResult createQueueResult
+  ResponseMetadata *responseMetadata
 }
 
 type sendMessageResponse struct {
@@ -18,6 +23,7 @@ type sendMessageResponse struct {
 
 type listQueuesResponse struct {
   ListQueuesResult listQueuesResult
+  ResponseMetadata *responseMetadata
 }
 
 type receiveMessageResponse struct {
@@ -32,6 +38,8 @@ type deleteMessageResponse struct {
 type deleteQueueResponse struct {
   ResponseMetadata responseMetadata
 }
+
+/* Inner response types */
 
 type createQueueResult struct {
   QueueUrl string
