@@ -32,6 +32,9 @@ func NewService(ep *awsconn.Endpoint)(*Service){
   return &Service{Endpoint: ep}
 }
 
+// Generates a canonical string based on the http.Request.
+// The request must be complete with the only missing field
+// the "Signature".
 func CanonicalizeRequest(req *http.Request)(cstr string){
   params := maptools.StringStringsJoin(req.Form, ",", true)
   cmap := maptools.StringStringEscape(params, sqsEscape, sqsEscape)
@@ -40,6 +43,7 @@ func CanonicalizeRequest(req *http.Request)(cstr string){
   return
 }
 
+// Canonicalizes and signs the request.
 func SignRequest(id auth.Signer, req *http.Request)(err os.Error){
   cstr := CanonicalizeRequest(req)
   //fmt.Printf("Canon String:\n==========\n{%s}\n=========\n", cstr)
@@ -50,6 +54,7 @@ func SignRequest(id auth.Signer, req *http.Request)(err os.Error){
   return
 }
 
+// Generates a new http.Request that is "send-ready".
 func (self *Service)signedRequest(id auth.Signer, path string, params map[string]string)(req *http.Request, err os.Error){
   req = self.Endpoint.NewHTTPRequest("GET", path, maptools.StringStringToStringStrings(params), nil)
   req.Form["AWSAccessKeyId"] = []string{auth.GetSignerIDString(id)}
@@ -70,7 +75,7 @@ func (self *Service)signedRequest(id auth.Signer, path string, params map[string
 }
 
 
-
+// Create a queue, returning the Queue object.
 func (self *Service)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq *Queue, err os.Error){
   sqsReq, err := self.signedRequest(id, "/", map[string]string{
     "Action": "CreateQueue",
@@ -91,6 +96,7 @@ func (self *Service)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq *
   return
 }
 
+// List all queues available at an endpoint.
 func (self *Service)ListQueues(id auth.Signer, prefix string)(out []*Queue, err os.Error){
   sqsReq, err := self.signedRequest(id, "/", map[string]string{
     "Action": "ListQueues",
