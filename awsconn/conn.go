@@ -120,6 +120,7 @@ func (self *Endpoint)NewHTTPClientConn(netname, local string, r *bufio.Reader)(h
   return
 }
 
+// Creates a connection and sends an httpRequest, returning the result and closing the stream.
 func (self *Endpoint)SendRequest(req *http.Request)(resp *http.Response, err os.Error){
   cc,err := self.NewHTTPClientConn("tcp", "", nil)
   if err != nil { return }
@@ -127,6 +128,7 @@ func (self *Endpoint)SendRequest(req *http.Request)(resp *http.Response, err os.
   return SendRequest(cc, req)
 }
 
+// Attempts to demarshal an XML response into the given response/error types.
 func (self *Endpoint)SendParsable(req *http.Request, out interface{}, etype os.Error)(err os.Error){
   resp, err := self.SendRequest(req)
   if err != nil { return }
@@ -163,10 +165,14 @@ func (self *Endpoint)NewHTTPRequest(method string, path string, params map[strin
   return
 }
 
+// Returns the value of the ContentType header (or the empty string).
+// Primarily a helper for canonicalization routines.
 func ContentType(req *http.Request)(string){
   return req.Header["Content-Type"]
 }
 
+// Returns the value of the ContentMd5 header (or the empty string).
+// Primarily a helper for canonicalization routines.
 func ContentMD5(req *http.Request)(string){
   return req.Header["Content-Md5"]
 }
