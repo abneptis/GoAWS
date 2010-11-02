@@ -15,6 +15,7 @@ package awsconn
 */
 
 import "com.abneptis.oss/urltools"
+import "com.abneptis.oss/maptools"
 
 import "http"
 import "net"
@@ -22,14 +23,28 @@ import "os"
 import "bufio"
 import "xml"
 
-// Sends a request and returns an error
-// A simple helper exposed as it is often
-// useful.
+// Sends an AWS request. 
+// A simple helper exposed as it is often useful.
+//
+// If req.Form is not empty, but req.URL.RawQuery is,
+// req.RawQuery will be filled with the values from
+// req.Form
 func SendRequest(cc *http.ClientConn, req *http.Request)(resp *http.Response, err os.Error){
+  if req.URL.RawQuery == "" && len(req.Form) > 0 {
+    req.URL.RawQuery = maptools.StringStringJoin(
+                        maptools.StringStringEscape(
+                         maptools.StringStringsJoin(req.Form, ",", false),
+                         http.URLEscape, http.URLEscape),
+                         "=", "&", true)
+  }
+  bb, _ := http.DumpRequest(req, true)
+  os.Stderr.Write(bb)
   err = cc.Write(req)
   if err == nil {
     resp, err = cc.Read()
   }
+  bb, _ = http.DumpResponse(resp, true)
+  os.Stderr.Write(bb)
   return
 }
 
@@ -104,3 +119,53 @@ func (self *Endpoint)NewHTTPClientConn(netname, local string, r *bufio.Reader)(h
   }
   return
 }
+
+
+func (self *Endpoint)SendParsable(req *http.Request, out interface{}, etype os.Error)(err os.Error){
+  cc,err := self.NewHTTPClientConn("tcp", "", nil)
+  if err != nil { return }
+  defer cc.Close()
+
+  resp, err := SendRequest(cc, req)
+  if err != nil { return }
+  if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+   err = ParseResponse(resp, out)
+  } else {
+   oserr := ParseResponse(resp, etype)
+   if oserr != nil {
+     err = oserr
+   } else {
+     err = etype
+   }
+  }
+  return
+}
+
+
+// Create an HTTP request with appropriate details pulled from the local 
+// endpoint and other details.
+func (self *Endpoint)NewHTTPRequest(method string, path string, params map[string][]string, headers map[string]string)(req *http.Request){
+  req = &http.Request {
+    Method: method,
+    Form: params,
+    Header: headers,
+    Host: self.URL.Host,
+    URL: &http.URL{
+      Host: self.URL.Host,
+      Scheme: self.URL.Scheme,
+      Path: path,
+    },
+  }
+  if req.Header == nil { req.Header = make(map[string]string) }
+  if req.Form   == nil { req.Form   = make(map[string][]string) }
+  return
+}
+
+func ContentType(req *http.Request)(string){
+  return req.Header["Content-Type"]
+}
+
+func ContentMD5(req *http.Request)(string){
+  return req.Header["Content-Md5"]
+}
+
