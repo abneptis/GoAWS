@@ -12,7 +12,7 @@ import "com.abneptis.oss/cryptools/signer"
 
 import "encoding/base64"
 import "http"
-import "fmt"
+//import "fmt"
 import "os"
 import "strconv"
 import "strings"
@@ -42,7 +42,7 @@ func CanonicalizeRequest(req *http.Request)(cstr string){
 
 func SignRequest(id auth.Signer, req *http.Request)(err os.Error){
   cstr := CanonicalizeRequest(req)
-  fmt.Printf("Canon String:\n==========\n{%s}\n=========\n", cstr)
+  //fmt.Printf("Canon String:\n==========\n{%s}\n=========\n", cstr)
   sig, err := signer.SignString64(id, base64.StdEncoding, cstr)
   if err == nil {
     req.Form["Signature"] = []string{sig}
