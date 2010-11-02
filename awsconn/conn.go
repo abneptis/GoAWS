@@ -37,14 +37,14 @@ func SendRequest(cc *http.ClientConn, req *http.Request)(resp *http.Response, er
                          http.URLEscape, http.URLEscape),
                          "=", "&", true)
   }
-  bb, _ := http.DumpRequest(req, true)
-  os.Stderr.Write(bb)
+  //bb, _ := http.DumpRequest(req, true)
+  //os.Stderr.Write(bb)
   err = cc.Write(req)
   if err == nil {
     resp, err = cc.Read()
   }
-  bb, _ = http.DumpResponse(resp, true)
-  os.Stderr.Write(bb)
+  //bb, _ = http.DumpResponse(resp, true)
+  //os.Stderr.Write(bb)
   return
 }
 
