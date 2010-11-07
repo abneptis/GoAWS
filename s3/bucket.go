@@ -158,3 +158,30 @@ func (self *Bucket)ListKeys(id auth.Signer, delim, marker, prefix string, max in
   }
   return
 }
+
+// Returns true if a key exists in the bucket.
+// Note(1): This is not a "cheap" operation.  Cheaper than get-object, yes, 
+// but it still does a full remote operation to test.
+// Note(2): Due to amazons eventual consistancy, you should not rely solely
+// on the result of this function as deterministic that a key has not been
+// set.  It is quite possible that a key will be set and an immediate check
+// of the same will fail, so retry logic should be built into the caller 
+// (stack)
+func (self *Bucket)Exists(id auth.Signer, key string)(exists bool, err os.Error){
+  hreq, err := NewQueryRequest(id, self.Endpoint, "HEAD", self.Name,key,"","", nil, nil)
+  if err != nil { return }
+  cc, err := self.Endpoint.NewHTTPClientConn("tcp","", nil)
+  if err != nil { return }
+  defer cc.Close()
+  resp, err := awsconn.SendRequest(cc, hreq)
+  if err != nil { return }
+  switch resp.StatusCode {
+    case 404:
+      exists = false
+    case 200:
+      exists = true
+    default:
+      err = os.NewError("Unexpected response: " + resp.Status )
+  }
+  return
+}
