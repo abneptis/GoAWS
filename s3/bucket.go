@@ -2,9 +2,13 @@ package s3
 
 import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/aws/auth"
+import "com.abneptis.oss/cryptools/hextools"
 //import "com.abneptis.oss/aws"
 
+import "bytes"
+import "crypto/md5"
 import "io"
+import "json"
 import "os"
 import "strconv"
 
@@ -183,5 +187,22 @@ func (self *Bucket)Exists(id auth.Signer, key string)(exists bool, err os.Error)
     default:
       err = os.NewError("Unexpected response: " + resp.Status )
   }
+  return
+}
+
+type nopCloser struct { io.Reader }
+func (nopCloser)Close()(n os.Error){return}
+
+func (self *Bucket)PutJSON(id auth.Signer, key, ctype string, obj interface{})(err os.Error){
+  rawb, err := json.Marshal(obj)
+  if err != nil { return }
+  mdh := md5.New()
+  _, err = mdh.Write(rawb)
+  if err != nil { return }
+  sum := mdh.Sum()
+  hout, err := hextools.HexString(false, true, string(sum))
+  if err != nil { return }
+
+  err = self.PutKey(id, key, ctype, hout, int64(len(rawb)), nopCloser{bytes.NewBuffer(rawb)})
   return
 }
