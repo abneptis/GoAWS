@@ -1,9 +1,10 @@
-package sqs
+package aws
 
 import "com.abneptis.oss/urltools"
 
-func sqsEscapeTest(i byte)(out bool){
-  switch i {
+
+func EscapeTest(b byte)(out bool){
+  switch b {
     case 'a','b','c','d','e','f','g','h','i','j','k','l','m',
          'A','B','C','D','E','F','G','H','I','J','K','L','M',
          'n','o','p','q','r','s','t','u','v','w','x','y','z',
@@ -16,9 +17,7 @@ func sqsEscapeTest(i byte)(out bool){
   return
 }
 
-func sqsEscape(in string)(out string){
-  return urltools.Escape(in, sqsEscapeTest, urltools.PercentUpper)
+func Escape(in string)(out string){
+  return urltools.Escape(in, EscapeTest, urltools.PercentUpper)
 }
-
-
 

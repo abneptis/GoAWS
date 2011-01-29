@@ -4,7 +4,6 @@ TARG=com.abneptis.oss/aws/sqs
 GOFILES=service.go\
 	queue.go\
 	message.go\
-	request.go\
 	error.go\
 	sqs_types.go\
 

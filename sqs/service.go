@@ -5,6 +5,7 @@
 // and message pushing/fetching and deletion.
 package sqs
 
+import "com.abneptis.oss/aws"
 import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/maptools"
@@ -39,7 +40,7 @@ func NewService(ep *awsconn.Endpoint)(*Service){
 // the "Signature".
 func CanonicalizeRequest(req *http.Request)(cstr string){
   params := maptools.StringStringsJoin(req.Form, ",", true)
-  cmap := maptools.StringStringEscape(params, sqsEscape, sqsEscape)
+  cmap := maptools.StringStringEscape(params, aws.Escape, aws.Escape)
   cstr = strings.Join([]string{req.Method, req.Host, req.URL.Path,
                  maptools.StringStringJoin(cmap, "=", "&", true)}, "\n")
   return
