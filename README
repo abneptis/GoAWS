@@ -6,7 +6,7 @@ and most of it is not yet thoroughly tested outside the direct
 paths required for the command line tools.
 
   For quick usage examples, see {s3,sqs}/tools/*.go.  The tools are fully
-capable of basic administration of S3 and SQS resources.
+capable of basic administration of S3, SQS, and SimpleDB resources.
 
   Please note, full compilation may depend on the following modules, also
 available at github:
