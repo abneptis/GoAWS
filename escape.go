@@ -3,6 +3,13 @@ package aws
 import "com.abneptis.oss/urltools"
 
 
+// EscapeTest returns true or false depending on
+// whether a specific byte should be escaped.
+//
+// Editors NOTE: This function affects request canonicalization
+// for SQS, SimpleDB (and possibly others), so be sure
+// to verify that your changes are correct across services, as
+// AWS services have independant escaping protocols.
 func EscapeTest(b byte)(out bool){
   switch b {
     case 'a','b','c','d','e','f','g','h','i','j','k','l','m',
