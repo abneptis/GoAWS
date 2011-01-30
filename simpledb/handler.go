@@ -62,23 +62,15 @@ func (self *Handler)PutAttributes(dn string, in string, attrs, expected Attribut
   parms := map[string]string{
     "ItemName": in,
   }
-  ctr := 0
   for i := range(attrs) {
-    for vi := range(attrs[i].Value){
-      itoa := strconv.Itoa(ctr)
-      parms["Attribute." + itoa + ".Name"] = attrs[i].Name
-      parms["Attribute." + itoa + ".Value"] = attrs[i].Value[vi]
-      ctr ++
-    }
+    itoa := strconv.Itoa(i)
+    parms["Attribute." + itoa + ".Name"] = attrs[i].Name
+    parms["Attribute." + itoa + ".Value"] = attrs[i].Value
   }
-  ctr = 0
   for i := range(expected) {
-    for vi := range(attrs[i].Value){
-      itoa := strconv.Itoa(ctr)
-      parms["Expected." + itoa + ".Name"] = attrs[i].Name
-      parms["Expected." + itoa + ".Value"] = attrs[i].Value[vi]
-      ctr ++
-    }
+    itoa := strconv.Itoa(i)
+    parms["Expected." + itoa + ".Name"] = expected[i].Name
+    parms["Expected." + itoa + ".Value"] = expected[i].Value
   }
   req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "PutAttributes", parms)
   if err == nil {

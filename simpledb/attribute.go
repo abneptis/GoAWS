@@ -2,7 +2,7 @@ package simpledb
 
 type Attribute struct {
   Name string
-  Value []string
+  Value string
 }
 
 type AttributeList []Attribute

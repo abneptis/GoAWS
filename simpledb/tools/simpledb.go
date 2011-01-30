@@ -30,7 +30,7 @@ func FlagAttributes()(out []simpledb.Attribute, err os.Error){
     attr := strings.Split(args[fi],  "=",2)
     switch len(attr) {
       case 1: out = append(out, simpledb.Attribute{Name: attr[0]})
-      case 2: out = append(out, simpledb.Attribute{Name: attr[0], Value: []string{attr[1]}})
+      case 2: out = append(out, simpledb.Attribute{Name: attr[0], Value: attr[1]})
       default: err = os.NewError("Unparsable parameter: " + args[fi])
     }
   }
@@ -77,10 +77,7 @@ func main(){
       log.Exitf("Couldn't get item")
     } else {
       for attri := range(attrs){
-        fmt.Printf("%s\n", attrs[attri].Name)
-        for vi := range(attrs[attri].Value){
-          fmt.Printf("\t%s\n", attrs[attri].Value[vi])
-        }
+        fmt.Printf("%s\t%s\n", attrs[attri].Name, attrs[attri].Value)
       }
     }
   }
@@ -90,10 +87,8 @@ func main(){
     for ii := range(items){
       fmt.Printf("%s\n", items[ii].Name)
       for ai := range(items[ii].Attribute){
-        fmt.Printf("\t%s:\n", items[ii].Attribute[ai].Name)
-        for avi := range(items[ii].Attribute[ai].Value){
-          fmt.Printf("\t\t%s\n", items[ii].Attribute[ai].Value[avi])
-        }
+        fmt.Printf("\t%s\t%s\n", items[ii].Attribute[ai].Name,
+                               items[ii].Attribute[ai].Value)
       }
     }
   }
