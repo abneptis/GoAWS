@@ -2,7 +2,6 @@ package simpledb
 
 import "com.abneptis.oss/aws/auth"
 
-import "fmt"
 import "http"
 import "os"
 import "strconv"
@@ -64,14 +63,14 @@ func (self *Handler)PutAttributes(dn string, in string, attrs, expected Attribut
     "ItemName": in,
   }
   for i := range(attrs) {
-    base := fmt.Sprintf("Attribute.%d.", i)
-    parms[base + "Name"] = attrs[i].Name
-    parms[base + "Value"] = attrs[i].Value
+    itoa := strconv.Itoa(i)
+    parms["Attribute." + itoa + ".Name"] = attrs[i].Name
+    parms["Attribute." + itoa + ".Value"] = attrs[i].Value
   }
   for i := range(expected) {
-    base := fmt.Sprintf("Expected.%d.", i)
-    parms[base + "Name"] = expected[i].Name
-    parms[base + "Value"] = expected[i].Value
+    itoa := strconv.Itoa(i)
+    parms["Expected." + itoa + ".Name"] = expected[i].Name
+    parms["Expected." + itoa + ".Value"] = expected[i].Value
   }
   req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "PutAttributes", parms)
   if err == nil {
