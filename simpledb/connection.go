@@ -5,7 +5,6 @@ import "com.abneptis.oss/aws"
 import "com.abneptis.oss/maptools"
 
 import "http"
-import "log"
 import "os"
 
 
@@ -63,7 +62,6 @@ func (self Connection)WriteRequest(req *http.Request)(resp *http.Response, err o
       return nil, self.abortConnection(err)
     }
   }
-  log.Printf("Final URL: %s", req.URL.String())
   if err == nil {
     resp, err = c.Read()
     if err != nil {

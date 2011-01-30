@@ -8,7 +8,6 @@ import "com.abneptis.oss/cryptools/signer"
 
 import "encoding/base64"
 import "http"
-import "log"
 import "os"
 import "strings"
 import "time"
@@ -24,8 +23,8 @@ func (self *Request)Sign(id auth.Signer)(err os.Error){
   sig, err := signer.SignString64(id, base64.StdEncoding, cstr)
   if err == nil {
     self.Form["Signature"] = []string{sig}
-    log.Printf("CanonString: {\n%s\n}", cstr)
-    log.Printf("Signature: %s", string(sig))
+    //log.Printf("CanonString: {\n%s\n}", cstr)
+    //log.Printf("Signature: %s", string(sig))
   }
   return
 }
