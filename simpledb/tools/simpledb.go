@@ -5,6 +5,7 @@ import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/aws/auth"
 
 import "flag"
+import "fmt"
 import "http"
 import "log"
 import "os"
@@ -48,20 +49,18 @@ func main(){
   ep := awsconn.NewEndpoint(url, nil)
   dbh := simpledb.NewHandler(simpledb.NewConnection(*ep, "tcp", ""), s)
   if *DoCreate {
-    resp, err := dbh.CreateDomain(*Domain)
+    _, err = dbh.CreateDomain(*Domain)
     if err != nil {
       log.Exitf("Couldn't create domain (req): %v", err)
     }
-    log.Printf("Response: %v", resp)
   }
   if *DoList {
     doms, err := dbh.ListDomains("", 100)
     if err != nil {
       log.Exitf("Couldn't list domain (req): %v", err)
     }
-    log.Printf("Domains:")
     for i := range(doms){
-      log.Printf("\t%d\t%s", i, doms[i])
+      fmt.Printf("%s\n", doms[i])
     }
   }
   if *DoPutAttributes {
@@ -69,26 +68,22 @@ func main(){
     if err != nil {
       log.Exitf("Error interpreting attr: %v", err)
     }
-    resp, err := dbh.PutAttributes(*Domain, *Item, attrs, nil)
-    log.Printf("Response: %v", resp)
+    _, err = dbh.PutAttributes(*Domain, *Item, attrs, nil)
   }
   if *DoGetAttributes {
     attrs, err := dbh.GetAttributes(*Domain, *Item, nil, false)
     if err != nil {
       log.Exitf("Couldn't get item")
     } else {
-      log.Printf("Attributes (%d):", len(attrs))
       for attri := range(attrs){
-        log.Printf("Attribute.%d.Name=%s", attri, attrs[attri].Name)
-        log.Printf("Attribute.%d.Value=%s", attri, attrs[attri].Value)
+        fmt.Printf("%s\t%s\n", attrs[attri].Name, attrs[attri].Value)
       }
     }
   }
   if *DoDelete {
-    resp, err := dbh.DeleteDomain(*Domain)
+    _, err = dbh.DeleteDomain(*Domain)
     if err != nil {
       log.Exitf("Couldn't delete domain (req): %v", err)
     }
-    log.Printf("Response: %v", resp)
   }
 }
