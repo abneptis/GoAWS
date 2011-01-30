@@ -9,18 +9,18 @@ import "io"
 type Response http.Response
 
 
-type ResponseMetadata struct {
+type responseMetadata struct {
   StatusCode string // not all requests generate this.
   RequestId string
   BoxUsage  string // string to avoid float precision issues
 }
 
-type ListDomainsResult struct {
+type listDomainsResult struct {
   DomainName []string
   NextToken string
 }
 
-type GetAttributesResult struct {
+type getAttributesResult struct {
   Attribute []Attribute
 }
 
@@ -29,15 +29,15 @@ type Item struct {
   Attribute []Attribute
 }
 
-type SelectResult struct {
+type selectResult struct {
   Item []Item
 }
 
 type SimpledbResponse struct {
-  ListDomainsResult ListDomainsResult
-  GetAttributesResult GetAttributesResult
-  ResponseMetadata ResponseMetadata
-  SelectResult SelectResult
+  ListDomainsResult listDomainsResult
+  GetAttributesResult getAttributesResult
+  ResponseMetadata responseMetadata
+  SelectResult selectResult
 }
 
 
