@@ -49,7 +49,7 @@ func newQuery(id auth.Signer, endpoint awsconn.Endpoint,
   if _, ok := params["SignatureVersion"]; ! ok { params["SignatureVersion"] = DEFAULT_SIGNATURE_VERSION  }
   if _, ok := params["SignatureMethod"]; ! ok { params["SignatureMethod"] = DEFAULT_SIGNATURE_METHOD }
   if _, ok := params["Timestamp"]; ! ok { params["Timestamp"] = time.UTC().Format("2006-01-02T15:04:05-07:00")}
-  // ListDomains doesn't require a DomainName attribute
+  // ListDomains, Select don't require a DomainName attribute
   if domain != "" { params["DomainName"] = domain }
   params["Action"] = action
   params["AWSAccessKeyId"] = string(id.PublicIdentity())

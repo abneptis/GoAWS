@@ -18,6 +18,7 @@ var DoGetAttributes = flag.Bool("get-attributes", false, "Get attributes (-item 
 var DoPutAttributes = flag.Bool("put-attributes", false, "Put attributes (-item is mandatory")
 
 var Item     = flag.String("item","","Item name")
+var Select   = flag.String("select","","Select query")
 var Domain = flag.String("domain", "", "Domain name")
 var DBUrl  = flag.String("DBUrl", "http://sdb.amazonaws.com", "SQS Endpoint")
 var AccessKey  = flag.String("access-key-id", "", "Access key")
@@ -77,6 +78,17 @@ func main(){
     } else {
       for attri := range(attrs){
         fmt.Printf("%s\t%s\n", attrs[attri].Name, attrs[attri].Value)
+      }
+    }
+  }
+  if *Select != "" {
+    var items []simpledb.Item
+    items, err = dbh.Select(*Select,"", false)
+    for ii := range(items){
+      fmt.Printf("%s\n", items[ii].Name)
+      for ai := range(items[ii].Attribute){
+        fmt.Printf("\t%s\t%s\n", items[ii].Attribute[ai].Name,
+                               items[ii].Attribute[ai].Value)
       }
     }
   }

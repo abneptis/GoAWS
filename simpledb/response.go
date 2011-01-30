@@ -24,10 +24,20 @@ type GetAttributesResult struct {
   Attribute []Attribute
 }
 
+type Item struct {
+  Name string
+  Attribute []Attribute
+}
+
+type SelectResult struct {
+  Item []Item
+}
+
 type SimpledbResponse struct {
   ListDomainsResult ListDomainsResult
   GetAttributesResult GetAttributesResult
   ResponseMetadata ResponseMetadata
+  SelectResult SelectResult
 }
 
 

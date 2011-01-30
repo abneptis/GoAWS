@@ -79,18 +79,40 @@ func (self *Handler)PutAttributes(dn string, in string, attrs, expected Attribut
   return
 }
 
-func (self *Handler)GetAttributes(dn string, in string, attrs []string, consistant bool)(out []Attribute, err os.Error){
+func (self *Handler)GetAttributes(dn string, in string, attrs []string, consistent bool)(out []Attribute, err os.Error){
   parms := map[string]string{
     "ItemName": in,
   }
   for i := range(attrs) {
    parms["Attribute." + strconv.Itoa(i) + ".Name"] = attrs[i]
   }
+  if consistent {
+    parms["ConsistentRead"] = "true"
+  }
   req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "GetAttributes", parms)
   var response SimpledbResponse
   if err == nil {
     response, err = self.doRequest(req)
     if err == nil { out = response.GetAttributesResult.Attribute }
+  }
+  return
+}
+
+func (self *Handler)Select(expression, next string, consistent bool)(out []Item, err os.Error){
+  parms := map[string]string{
+    "SelectExpression": expression,
+  }
+  if next != "" {
+    parms["NextToken"] = next
+  }
+  if consistent {
+    parms["ConsistentRead"] = "true"
+  }
+  req, err := newQuery(self.signer, self.conn.Endpoint(), "", "Select", parms)
+  var response SimpledbResponse
+  if err == nil {
+    response, err = self.doRequest(req)
+    if err == nil { out = response.SelectResult.Item }
   }
   return
 }
