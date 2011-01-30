@@ -78,7 +78,9 @@ func GetQueue()(Q *sqs.Queue, err os.Error){
       ep := awsconn.NewEndpoint(ep, proxyURL)
       _sqs := sqs.NewService(ep)
       Q, err = _sqs.CreateQueue(id, *queueName, 90)
-      log.Printf("Q, err: [%p, %v]", Q, err)
+      if err != nil {
+        log.Exitf("Qerr: [%v]", err)
+      }
     }
   } else {
     err = os.NewError("Either Queue(+Endpoint) or QueueURL are required")
