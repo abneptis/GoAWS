@@ -2,6 +2,7 @@ include $(GOROOT)/src/Make.inc
 
 TARG=com.abneptis.oss/aws/simpledb
 GOFILES=\
+	attribute.go\
 	consts.go\
 	connection.go\
 	handler.go\
