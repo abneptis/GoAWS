@@ -9,6 +9,7 @@ GOFILES=\
 	query.go\
 	response.go\
 
+DEPS=../
 
 CLEANFILES+=\
 	tools/*.[568vq]\
