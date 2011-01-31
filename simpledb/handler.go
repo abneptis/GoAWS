@@ -58,7 +58,7 @@ func (self *Handler)DeleteDomain(dn string)(response SimpledbResponse, err os.Er
 }
 
 
-func (self *Handler)PutAttributes(dn string, in string, attrs, expected AttributeList)(response SimpledbResponse, err os.Error){
+func (self *Handler)PutAttributes(dn string, in string, attrs, expected AttributeList)(err os.Error){
   parms := map[string]string{
     "ItemName": in,
   }
@@ -74,7 +74,7 @@ func (self *Handler)PutAttributes(dn string, in string, attrs, expected Attribut
   }
   req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "PutAttributes", parms)
   if err == nil {
-    response, err = self.doRequest(req)
+    _, err = self.doRequest(req)
   }
   return
 }
