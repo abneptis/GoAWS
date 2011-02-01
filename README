@@ -5,8 +5,8 @@ I'm happy with the form of.
 and most of it is not yet thoroughly tested outside the direct 
 paths required for the command line tools.
 
-  For quick usage examples, see {s3,simpledb,sqs}/tools/*.go.  The tools are 
-fully capable of basic administration of S3, SQS, and SimpleDB resources, but 
+  For quick usage examples, see {elb,s3,simpledb,sqs}/tools/*.go.  The tools are 
+fully capable of basic administration of ELB, S3, SQS, and SimpleDB resources, but 
 are intended primarily for testing and API usage examples.
 
   Please note, full compilation may depend on the following modules, also
