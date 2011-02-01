@@ -7,7 +7,7 @@
 package s3
 
 import "com.abneptis.oss/aws/awsconn"
-import "com.abneptis.oss/aws/auth"
+import "com.abneptis.oss/cryptools"
 //import "com.abneptis.oss/aws"
 
 import "os"
@@ -41,7 +41,7 @@ type bucketRecord struct {
 
 // Returns a list of bucket names known by the endpoint.  Depending on the 
 // endpoint used, your list may be global or regional in nature.
-func ListBuckets(id auth.Signer, ep *awsconn.Endpoint)(out []string, err os.Error){
+func ListBuckets(id cryptools.NamedSigner, ep *awsconn.Endpoint)(out []string, err os.Error){
   hreq, err := NewQueryRequest(id, ep, "GET", "","","","", nil, nil)
   if err != nil { return }
 

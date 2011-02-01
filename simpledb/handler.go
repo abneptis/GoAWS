@@ -1,6 +1,6 @@
 package simpledb
 
-import "com.abneptis.oss/aws/auth"
+import "com.abneptis.oss/cryptools"
 
 import "http"
 import "os"
@@ -8,10 +8,10 @@ import "strconv"
 
 type Handler struct {
   conn AWSConnection
-  signer auth.Signer
+  signer cryptools.NamedSigner
 }
 
-func NewHandler(c AWSConnection, a auth.Signer)(*Handler){
+func NewHandler(c AWSConnection, a cryptools.NamedSigner)(*Handler){
   return &Handler{ conn: c, signer: a}
 }
 

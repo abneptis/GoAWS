@@ -1,8 +1,7 @@
 package s3
 
 import "com.abneptis.oss/aws/awsconn"
-import "com.abneptis.oss/aws/auth"
-import "com.abneptis.oss/cryptools/signer"
+import "com.abneptis.oss/cryptools"
 import "com.abneptis.oss/urltools"
 import "com.abneptis.oss/maptools"
 
@@ -43,7 +42,7 @@ func s3Escape(in string)(out string){
 //
 // If Expiration is < 1 year (in seconds), the expiration is assumed to
 // mean seconds-from-now (local clock based).
-func NewQueryRequest(id auth.Signer, endpoint *awsconn.Endpoint,
+func NewQueryRequest(id cryptools.NamedSigner, endpoint *awsconn.Endpoint,
                      method, bucket, key, ctype, cmd5 string,
                      params, hdrs map[string]string)(req *http.Request, err os.Error){
   req = &http.Request {
@@ -66,12 +65,12 @@ func NewQueryRequest(id auth.Signer, endpoint *awsconn.Endpoint,
       req.URL.Path += "/" + key
     }
   }
-  req.Form["AWSAccessKeyId"] = []string{auth.GetSignerIDString(id)}
+  req.Form["AWSAccessKeyId"] = []string{id.SignerName()}
   if len(req.Form["Expires"]) == 0 {
     req.Form["Expires"] = []string{strconv.Itoa64(time.Seconds() + 30)}
   }
   if len(req.Form["Signature"]) == 0 {
-    sig, err := signer.SignString64(id, base64.StdEncoding, CanonicalString(req))
+    sig, err := cryptools.SignString64(id, base64.StdEncoding, cryptools.SignableString(CanonicalString(req)))
     if err != nil { return }
     req.Form["Signature"] = []string{sig}
   }

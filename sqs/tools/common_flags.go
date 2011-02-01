@@ -10,7 +10,9 @@ package main
 
 import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/aws/sqs"
-import "com.abneptis.oss/aws/auth"
+import "com.abneptis.oss/aws"
+
+import "com.abneptis.oss/cryptools"
 
 import "flag"
 import "http"
@@ -52,11 +54,11 @@ func GetSQSService()(s *sqs.Service, err os.Error){
   return
 }
 
-func GetAWSIdentity()(s auth.Signer, err os.Error){
+func GetAWSIdentity()(s cryptools.NamedSigner, err os.Error){
   if accessKeyId == nil || secretKeyId == nil || *accessKeyId == "" || *secretKeyId == "" {
    return nil, os.NewError("-access-key and -secret-key are both required")
   }
-  return auth.NewIdentity("sha256", *accessKeyId, *secretKeyId)
+  return aws.NewIdentity("sha256", *accessKeyId, *secretKeyId)
 }
 
 

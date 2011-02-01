@@ -1,8 +1,8 @@
 package s3
 
 import "com.abneptis.oss/aws/awsconn"
-import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/cryptools/hextools"
+import "com.abneptis.oss/cryptools"
 //import "com.abneptis.oss/aws"
 
 import "bytes"
@@ -34,7 +34,7 @@ type bucketList struct {
   Bucket []string
 }
 
-func (self *Bucket)Create(id auth.Signer)(err os.Error){
+func (self *Bucket)Create(id cryptools.NamedSigner)(err os.Error){
   hreq, err := NewQueryRequest(id, self.Endpoint, "PUT", self.Name,"","","", nil, nil)
   if err != nil { return }
   resp, err := self.Endpoint.SendRequest(hreq)
@@ -48,7 +48,7 @@ func (self *Bucket)Create(id auth.Signer)(err os.Error){
 
 // Destroys an S3 bucket.  It is NOT an error to delete a bucket with
 // contents.
-func (self *Bucket)Destroy(id auth.Signer)(err os.Error){
+func (self *Bucket)Destroy(id cryptools.NamedSigner)(err os.Error){
   hreq, err := NewQueryRequest(id, self.Endpoint, "DELETE", self.Name,"","","", nil, nil)
   if err != nil { return }
   resp, err := self.Endpoint.SendRequest(hreq)
@@ -60,7 +60,7 @@ func (self *Bucket)Destroy(id auth.Signer)(err os.Error){
 }
 
 // Get an s3.Object with a ReadCloser for the body.
-func (self *Bucket)GetKey(id auth.Signer, key string)(obj *Object, err os.Error){
+func (self *Bucket)GetKey(id cryptools.NamedSigner, key string)(obj *Object, err os.Error){
   hreq, err := NewQueryRequest(id, self.Endpoint, "GET", self.Name,key,"","", nil, nil)
   if err != nil { return }
   cc, err := self.Endpoint.NewHTTPClientConn("tcp","", nil)
@@ -82,7 +82,7 @@ func (self *Bucket)GetKey(id auth.Signer, key string)(obj *Object, err os.Error)
 }
 
 // Delete an S3 Key.
-func (self *Bucket)DeleteKey(id auth.Signer, key string)(err os.Error){
+func (self *Bucket)DeleteKey(id cryptools.NamedSigner, key string)(err os.Error){
   hreq, err := NewQueryRequest(id, self.Endpoint, "DELETE", self.Name,key,"","", nil, nil)
   if err != nil { return }
   resp, err := self.Endpoint.SendRequest(hreq)
@@ -100,7 +100,7 @@ func (self *Bucket)DeleteKey(id auth.Signer, key string)(err os.Error){
 }
 
 // Write S3 Key.
-func (self *Bucket)PutKey(id auth.Signer, key, ctype, cmd5 string, llen int64, rc io.ReadCloser)(err os.Error){
+func (self *Bucket)PutKey(id cryptools.NamedSigner, key, ctype, cmd5 string, llen int64, rc io.ReadCloser)(err os.Error){
   hreq, err := NewQueryRequest(id, self.Endpoint, "PUT", self.Name,key,ctype,cmd5, nil, nil)
   hreq.ContentLength = llen
   hreq.Body = rc
@@ -139,7 +139,7 @@ type bucketResult struct {
 //
 // Users should be aware that there is no Body in the objects returned
 // by ListKeys.
-func (self *Bucket)ListKeys(id auth.Signer, delim, marker, prefix string, max int)(out []*Object, err os.Error){
+func (self *Bucket)ListKeys(id cryptools.NamedSigner, delim, marker, prefix string, max int)(out []*Object, err os.Error){
   hreq, err := NewQueryRequest(id, self.Endpoint, "GET", self.Name,"","","", nil, nil)
   if err != nil { return }
   if delim != "" {
@@ -171,7 +171,7 @@ func (self *Bucket)ListKeys(id auth.Signer, delim, marker, prefix string, max in
 // set.  It is quite possible that a key will be set and an immediate check
 // of the same will fail, so retry logic should be built into the caller 
 // (stack)
-func (self *Bucket)Exists(id auth.Signer, key string)(exists bool, err os.Error){
+func (self *Bucket)Exists(id cryptools.NamedSigner, key string)(exists bool, err os.Error){
   hreq, err := NewQueryRequest(id, self.Endpoint, "HEAD", self.Name,key,"","", nil, nil)
   if err != nil { return }
   cc, err := self.Endpoint.NewHTTPClientConn("tcp","", nil)
@@ -193,7 +193,7 @@ func (self *Bucket)Exists(id auth.Signer, key string)(exists bool, err os.Error)
 type nopCloser struct { io.Reader }
 func (nopCloser)Close()(n os.Error){return}
 
-func (self *Bucket)PutJSON(id auth.Signer, key, ctype string, obj interface{})(err os.Error){
+func (self *Bucket)PutJSON(id cryptools.NamedSigner, key, ctype string, obj interface{})(err os.Error){
   rawb, err := json.Marshal(obj)
   if err != nil { return }
   mdh := md5.New()

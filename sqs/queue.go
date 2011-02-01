@@ -1,8 +1,8 @@
 package sqs
 
 //import "com.abneptis.oss/aws"
+import "com.abneptis.oss/cryptools"
 import "com.abneptis.oss/aws/awsconn"
-import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/uuid"
 import "com.abneptis.oss/maptools"
 import "bytes"
@@ -39,7 +39,7 @@ func NewQueueURL(ep *awsconn.Endpoint)(mq *Queue){
 }
 
 // Deletes an SQS queue.
-func (self *Queue)Delete(id auth.Signer)(err os.Error){
+func (self *Queue)Delete(id cryptools.NamedSigner)(err os.Error){
   if self == nil || self.Endpoint == nil { return os.NewError("Undefined endpoint!") }
   sqsReq, err := self.signedRequest(id, map[string]string{
     "Action": "DeleteQueue",
@@ -57,7 +57,7 @@ func (self *Queue)Delete(id auth.Signer)(err os.Error){
 // Pushes the raw bytes into SQS, returning the message UUID.
 //
 // NB, we don't do any verification of the MD5
-func (self *Queue)Push(id auth.Signer, body []byte)(msgid *uuid.UUID, err os.Error){
+func (self *Queue)Push(id cryptools.NamedSigner, body []byte)(msgid *uuid.UUID, err os.Error){
   sqsReq, err := self.signedRequest(id, map[string]string{
     "Action": "SendMessage",
     "MessageBody": string(body),
@@ -73,7 +73,7 @@ func (self *Queue)Push(id auth.Signer, body []byte)(msgid *uuid.UUID, err os.Err
 }
 
 // Helper function that Push()'s a string instead of []bytes.
-func (self *Queue)PushString(id auth.Signer, body string)(*uuid.UUID, os.Error){
+func (self *Queue)PushString(id cryptools.NamedSigner, body string)(*uuid.UUID, os.Error){
   buff := bytes.NewBufferString(body)
   return self.Push(id, buff.Bytes())
 }
@@ -81,7 +81,7 @@ func (self *Queue)PushString(id auth.Signer, body string)(*uuid.UUID, os.Error){
 // Fetches messages from SQS.  Note SQS may raise an error if you
 // set "lim" higher than 10 (lim <0 will default to MaxNumberOfMessages.).
 // Timeout is 
-func (self *Queue)FetchMessages(id auth.Signer, lim, timeout int)(m []*Message, err os.Error){
+func (self *Queue)FetchMessages(id cryptools.NamedSigner, lim, timeout int)(m []*Message, err os.Error){
   if lim <= 0 { lim = MaxNumberOfMessages }
   parms := map[string]string{
     "Action": "ReceiveMessage",
@@ -104,7 +104,7 @@ func (self *Queue)FetchMessages(id auth.Signer, lim, timeout int)(m []*Message, 
 }
 
 
-func (self *Queue)DeleteMessage(id auth.Signer, m *Message)(err os.Error){
+func (self *Queue)DeleteMessage(id cryptools.NamedSigner, m *Message)(err os.Error){
   sqsReq, err := self.signedRequest(id, map[string]string{
     "Action": "DeleteMessage",
     "ReceiptHandle": m.ReceiptHandle,
@@ -119,9 +119,9 @@ func (self *Queue)DeleteMessage(id auth.Signer, m *Message)(err os.Error){
   return
 }
 
-func (self *Queue)signedRequest(id auth.Signer, params map[string]string)(req *http.Request, err os.Error){
+func (self *Queue)signedRequest(id cryptools.NamedSigner, params map[string]string)(req *http.Request, err os.Error){
   req = self.Endpoint.NewHTTPRequest("GET", self.Endpoint.GetURL().Path, maptools.StringStringToStringStrings(params), nil)
-  req.Form["AWSAccessKeyId"] = []string{auth.GetSignerIDString(id)}
+  req.Form["AWSAccessKeyId"] = []string{id.SignerName()}
   if len(req.Form["Version"]) == 0 {
     req.Form["Version"] = []string{DefaultSQSVersion}
   }

@@ -9,8 +9,8 @@
 package main
 
 import "com.abneptis.oss/aws/awsconn"
-import "com.abneptis.oss/aws/auth"
-//import "com.abneptis.oss/aws/s3"
+import "com.abneptis.oss/aws"
+import "com.abneptis.oss/cryptools"
 
 import "flag"
 import "http"
@@ -43,10 +43,10 @@ func GetS3Endpoint()(ep *awsconn.Endpoint, err os.Error){
   return
 }
 
-func GetAWSIdentity()(s auth.Signer, err os.Error){
+func GetAWSIdentity()(s cryptools.NamedSigner, err os.Error){
   if accessKeyId == nil || secretKeyId == nil || *accessKeyId == "" || *secretKeyId == "" {
    return nil, os.NewError("-access-key and -secret-key are both required")
   }
-  return auth.NewIdentity("sha1", *accessKeyId, *secretKeyId)
+  return aws.NewIdentity("sha1", *accessKeyId, *secretKeyId)
 }
 

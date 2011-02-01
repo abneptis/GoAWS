@@ -6,10 +6,9 @@
 package sqs
 
 import "com.abneptis.oss/aws"
-import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/aws/awsconn"
 import "com.abneptis.oss/maptools"
-import "com.abneptis.oss/cryptools/signer"
+import "com.abneptis.oss/cryptools"
 
 import "encoding/base64"
 import "http"
@@ -47,10 +46,10 @@ func CanonicalizeRequest(req *http.Request)(cstr string){
 }
 
 // Canonicalizes and signs the request.
-func SignRequest(id auth.Signer, req *http.Request)(err os.Error){
+func SignRequest(id cryptools.NamedSigner, req *http.Request)(err os.Error){
   cstr := CanonicalizeRequest(req)
   //fmt.Printf("Canon String:\n==========\n{%s}\n=========\n", cstr)
-  sig, err := signer.SignString64(id, base64.StdEncoding, cstr)
+  sig, err := cryptools.SignString64(id, base64.StdEncoding, cryptools.SignableString(cstr))
   if err == nil {
     req.Form["Signature"] = []string{sig}
   }
@@ -58,9 +57,9 @@ func SignRequest(id auth.Signer, req *http.Request)(err os.Error){
 }
 
 // Generates a new http.Request that is "send-ready".
-func (self *Service)signedRequest(id auth.Signer, path string, params map[string]string)(req *http.Request, err os.Error){
+func (self *Service)signedRequest(id cryptools.NamedSigner, path string, params map[string]string)(req *http.Request, err os.Error){
   req = self.Endpoint.NewHTTPRequest("GET", path, maptools.StringStringToStringStrings(params), nil)
-  req.Form["AWSAccessKeyId"] = []string{auth.GetSignerIDString(id)}
+  req.Form["AWSAccessKeyId"] = []string{id.SignerName()}
   if len(req.Form["Version"]) == 0 {
     req.Form["Version"] = []string{DefaultSQSVersion}
   }
@@ -79,7 +78,7 @@ func (self *Service)signedRequest(id auth.Signer, path string, params map[string
 
 
 // Create a queue, returning the Queue object.
-func (self *Service)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq *Queue, err os.Error){
+func (self *Service)CreateQueue(id cryptools.NamedSigner, name string, dvtimeout int)(mq *Queue, err os.Error){
   sqsReq, err := self.signedRequest(id, "/", map[string]string{
     "Action": "CreateQueue",
     "QueueName": name,
@@ -100,7 +99,7 @@ func (self *Service)CreateQueue(id auth.Signer, name string, dvtimeout int)(mq *
 }
 
 // List all queues available at an endpoint.
-func (self *Service)ListQueues(id auth.Signer, prefix string)(out []*Queue, err os.Error){
+func (self *Service)ListQueues(id cryptools.NamedSigner, prefix string)(out []*Queue, err os.Error){
   sqsReq, err := self.signedRequest(id, "/", map[string]string{
     "Action": "ListQueues",
   })

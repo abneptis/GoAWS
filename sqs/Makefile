@@ -7,5 +7,8 @@ GOFILES=service.go\
 	error.go\
 	sqs_types.go\
 
+DEPS=\
+	../awsconn\
+
 include $(GOROOT)/src/Make.pkg
 

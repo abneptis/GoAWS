@@ -2,7 +2,7 @@ package main
 
 import "com.abneptis.oss/aws/simpledb"
 import "com.abneptis.oss/aws/awsconn"
-import "com.abneptis.oss/aws/auth"
+import "com.abneptis.oss/aws"
 
 import "flag"
 import "fmt"
@@ -43,7 +43,7 @@ func main(){
   if err != nil {
     log.Exitf("DBUrl (%s) invalid: (%v)", *DBUrl, err)
   }
-  s, err := auth.NewIdentity("sha256", *AccessKey, *SecretAccessKey)
+  s, err := aws.NewIdentity("sha256", *AccessKey, *SecretAccessKey)
   if err != nil {
     log.Exitf("Couldn't create identity: %v", err)
   }
@@ -69,7 +69,7 @@ func main(){
     if err != nil {
       log.Exitf("Error interpreting attr: %v", err)
     }
-    _, err = dbh.PutAttributes(*Domain, *Item, attrs, nil)
+    err = dbh.PutAttributes(*Domain, *Item, attrs, nil)
   }
   if *DoGetAttributes {
     attrs, err := dbh.GetAttributes(*Domain, *Item, nil, false)

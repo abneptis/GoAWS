@@ -1,10 +1,11 @@
-package auth
+package aws
 /* 
   Copyright (c) 2010, Abneptis LLC.
   See COPYRIGHT and LICENSE for details.
 */
 
 import "com.abneptis.oss/cryptools/hashes"
+import "com.abneptis.oss/cryptools"
 
 import "bytes"
 import "os"
@@ -20,7 +21,7 @@ type Identity struct {
 
 // Constructs a new signer object based off of the
 // an ak/sk string pair.
-func NewIdentity(mech, ak, sk string)(id Signer, err os.Error){
+func NewIdentity(mech, ak, sk string)(id cryptools.NamedSigner, err os.Error){
   akb := bytes.NewBufferString(ak)
   skb := bytes.NewBufferString(sk)
   hf, err := hashes.GetHashFunc(mech)
@@ -43,13 +44,15 @@ func (self *Identity)PublicIdentity()(out []byte){
 // (cryptools/signer/Sign()) - Implements the Sign() interface,
 // returns a raw byte signature based off of a raw byte string-to-sign.
 // Errors can only be returned on bad/short writes to the hash function.
-func (self *Identity)Sign(sts []byte)(out []byte, err os.Error){
+func (self *Identity)Sign(s cryptools.Signable)(sig cryptools.Signature, err os.Error){
   hh := hmac.New(self.sigHasher, self.secretAccessKey)
-  n, err := hh.Write(sts)
+  sb, err := s.SignableBytes()
+  if err != nil { return }
+  n, err := hh.Write(sb)
   if err == nil {
-    out = hh.Sum()
+    sig = cryptools.NewSignature(hh.Sum())
   }
-  if n != len(sts) {
+  if n != len(sb) {
     err = os.NewError("Hash function did not read entire string-to-sign")
   }
   return
@@ -60,12 +63,14 @@ func (self *Identity)Sign(sts []byte)(out []byte, err os.Error){
 //
 // NB: If the signing function returns an empty signature, AND the
 // verification signature is empty, it is considered a pass.
-func (self *Identity)Verify(uvsig, sts []byte)(err os.Error){
-  sig, err := self.Sign(sts)
+func (self *Identity)VerifySignature(sig cryptools.Signature, o cryptools.Signable)(err os.Error){
+  esig, err := self.Sign(o)
   if err == nil {
-    if len(uvsig) == len(sig) {
-      for i := range(uvsig) {
-        if sig[i] != uvsig[i] {
+    eb := esig.SignatureBytes()
+    sb := sig.SignatureBytes()
+    if len(eb) == len(sb) {
+      for i := range(eb) {
+        if eb[i] != sb[i] {
           err = os.NewError("Signature verification failed")
         }
       }
@@ -74,4 +79,8 @@ func (self *Identity)Verify(uvsig, sts []byte)(err os.Error){
     }
   }
   return
+}
+
+func (self *Identity)SignerName()(string){
+  return string(self.accessKeyID)
 }

@@ -1,10 +1,9 @@
 package simpledb
 
 import "com.abneptis.oss/aws/awsconn"
-import "com.abneptis.oss/aws/auth"
 import "com.abneptis.oss/aws"
 import "com.abneptis.oss/maptools"
-import "com.abneptis.oss/cryptools/signer"
+import "com.abneptis.oss/cryptools"
 
 import "encoding/base64"
 import "http"
@@ -15,12 +14,12 @@ import "time"
 
 type Request http.Request
 
-func (self *Request)Sign(id auth.Signer)(err os.Error){
+func (self *Request)Sign(id cryptools.NamedSigner)(err os.Error){
   params := maptools.StringStringsJoin(self.Form, ",", true)
   cmap := maptools.StringStringEscape(params, aws.Escape, aws.Escape)
   cstr := strings.Join([]string{self.Method, self.Host, self.URL.Path,
                  maptools.StringStringJoin(cmap, "=", "&", true)}, "\n")
-  sig, err := signer.SignString64(id, base64.StdEncoding, cstr)
+  sig, err := cryptools.SignString64(id, base64.StdEncoding, cryptools.SignableString(cstr))
   if err == nil {
     self.Form["Signature"] = []string{sig}
     //log.Printf("CanonString: {\n%s\n}", cstr)
@@ -30,7 +29,7 @@ func (self *Request)Sign(id auth.Signer)(err os.Error){
 }
 
 
-func newQuery(id auth.Signer, endpoint awsconn.Endpoint,
+func newQuery(id cryptools.NamedSigner, endpoint awsconn.Endpoint,
               domain, action string,
               params map[string]string)(hreq *http.Request, err os.Error){
 
@@ -52,7 +51,7 @@ func newQuery(id auth.Signer, endpoint awsconn.Endpoint,
   // ListDomains, Select don't require a DomainName attribute
   if domain != "" { params["DomainName"] = domain }
   params["Action"] = action
-  params["AWSAccessKeyId"] = string(id.PublicIdentity())
+  params["AWSAccessKeyId"] = id.SignerName()
 
   req.Form =  maptools.StringStringToStringStrings(params)
   if len(http.EncodeQuery(req.Form)) > 512{
