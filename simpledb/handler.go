@@ -70,7 +70,15 @@ func (self *Handler)PutAttributes(dn string, in string, attrs, expected Attribut
   for i := range(expected) {
     itoa := strconv.Itoa(i)
     parms["Expected." + itoa + ".Name"] = expected[i].Name
-    parms["Expected." + itoa + ".Value"] = expected[i].Value
+    if expected[i].Exists == nil {
+      parms["Expected." + itoa + ".Value"] = expected[i].Value
+    } else {
+       if *expected[i].Exists {
+         parms["Expected." + itoa + ".Exists"] = "true"
+       } else {
+         parms["Expected." + itoa + ".Exists"] = "false"
+       }
+    }
   }
   req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "PutAttributes", parms)
   if err == nil {
