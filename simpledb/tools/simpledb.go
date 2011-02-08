@@ -41,24 +41,24 @@ func main(){
   flag.Parse()
   url, err := http.ParseURL(*DBUrl)
   if err != nil {
-    log.Exitf("DBUrl (%s) invalid: (%v)", *DBUrl, err)
+    log.Fatalf("DBUrl (%s) invalid: (%v)", *DBUrl, err)
   }
   s, err := aws.NewIdentity("sha256", *AccessKey, *SecretAccessKey)
   if err != nil {
-    log.Exitf("Couldn't create identity: %v", err)
+    log.Fatalf("Couldn't create identity: %v", err)
   }
   ep := awsconn.NewEndpoint(url, nil)
   dbh := simpledb.NewHandler(simpledb.NewConnection(*ep, "tcp", ""), s)
   if *DoCreate {
     _, err = dbh.CreateDomain(*Domain)
     if err != nil {
-      log.Exitf("Couldn't create domain (req): %v", err)
+      log.Fatalf("Couldn't create domain (req): %v", err)
     }
   }
   if *DoList {
     doms, err := dbh.ListDomains("", 100)
     if err != nil {
-      log.Exitf("Couldn't list domain (req): %v", err)
+      log.Fatalf("Couldn't list domain (req): %v", err)
     }
     for i := range(doms){
       fmt.Printf("%s\n", doms[i])
@@ -67,14 +67,14 @@ func main(){
   if *DoPutAttributes {
     attrs, err := FlagAttributes()
     if err != nil {
-      log.Exitf("Error interpreting attr: %v", err)
+      log.Fatalf("Error interpreting attr: %v", err)
     }
     err = dbh.PutAttributes(*Domain, *Item, attrs, nil)
   }
   if *DoGetAttributes {
     attrs, err := dbh.GetAttributes(*Domain, *Item, nil, false)
     if err != nil {
-      log.Exitf("Couldn't get item")
+      log.Fatalf("Couldn't get item")
     } else {
       for attri := range(attrs){
         fmt.Printf("%s\t%s\n", attrs[attri].Name, attrs[attri].Value)
@@ -95,7 +95,7 @@ func main(){
   if *DoDelete {
     _, err = dbh.DeleteDomain(*Domain)
     if err != nil {
-      log.Exitf("Couldn't delete domain (req): %v", err)
+      log.Fatalf("Couldn't delete domain (req): %v", err)
     }
   }
 }
