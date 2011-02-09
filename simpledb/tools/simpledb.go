@@ -16,6 +16,7 @@ var DoDelete = flag.Bool("delete", false, "Delete the domain")
 var DoList   = flag.Bool("list", false, "List domains")
 var DoGetAttributes = flag.Bool("get-attributes", false, "Get attributes (-item is mandatory")
 var DoPutAttributes = flag.Bool("put-attributes", false, "Put attributes (-item is mandatory")
+var DoDeleteAttributes = flag.Bool("del-attributes", false, "Del attributes (-item is mandatory")
 
 var Item     = flag.String("item","","Item name")
 var Select   = flag.String("select","","Select query")
@@ -79,6 +80,12 @@ func main(){
       for attri := range(attrs){
         fmt.Printf("%s\t%s\n", attrs[attri].Name, attrs[attri].Value)
       }
+    }
+  }
+  if *DoDeleteAttributes {
+    err = dbh.DeleteAttributes(*Domain, *Item, nil, nil)
+    if err != nil {
+      log.Fatalf("Couldn't delete item attrs: %v", err)
     }
   }
   if *Select != "" {

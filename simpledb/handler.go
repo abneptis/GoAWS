@@ -124,3 +124,35 @@ func (self *Handler)Select(expression, next string, consistent bool)(out []Item,
   }
   return
 }
+
+
+
+
+func (self *Handler)DeleteAttributes(dn string, in string, attrs, expected AttributeList)(err os.Error){
+  parms := map[string]string{
+    "ItemName": in,
+  }
+  for i := range(attrs) {
+    itoa := strconv.Itoa(i)
+    parms["Attribute." + itoa + ".Name"] = attrs[i].Name
+    parms["Attribute." + itoa + ".Value"] = attrs[i].Value
+  }
+  for i := range(expected) {
+    itoa := strconv.Itoa(i)
+    parms["Expected." + itoa + ".Name"] = expected[i].Name
+    if expected[i].Exists == nil {
+      parms["Expected." + itoa + ".Value"] = expected[i].Value
+    } else {
+       if *expected[i].Exists {
+         parms["Expected." + itoa + ".Exists"] = "true"
+       } else {
+         parms["Expected." + itoa + ".Exists"] = "false"
+       }
+    }
+  }
+  req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "DeleteAttributes", parms)
+  if err == nil {
+    _, err = self.doRequest(req)
+  }
+  return
+}
