@@ -3,8 +3,6 @@ package simpledb
 import "http"
 import "xml"
 import "os"
-import "log"
-import "io"
 
 type Response http.Response
 
@@ -33,23 +31,31 @@ type selectResult struct {
   Item []Item
 }
 
+type responseError struct {
+  Error errorResult
+}
+
+type errorResult struct {
+  Code string
+  Message string
+}
+
 type SimpledbResponse struct {
   ListDomainsResult listDomainsResult
   GetAttributesResult getAttributesResult
   ResponseMetadata responseMetadata
   SelectResult selectResult
+  Errors responseError
 }
 
 
 func (self Response)ParseResponse()(resp SimpledbResponse, err os.Error){
-  switch self.StatusCode {
-    case http.StatusOK: err = xml.Unmarshal(self.Body, &resp)
-    case http.StatusNotFound: err = os.NewError("Not found")
-    case http.StatusForbidden: err = os.NewError("Not authorized")
-    default:
-	err = os.NewError("Unexpected status code")
-	log.Printf("Unexpected status code: %d", self.StatusCode)
-        io.Copy(os.Stdout, self.Body)
+  err = xml.Unmarshal(self.Body, &resp)
+  if err != nil {
+    return
+  }
+  if resp.Errors.Error.Code != "" {
+    err = os.NewError(resp.Errors.Error.Code)
   }
   return
 }
