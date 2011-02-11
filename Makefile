@@ -7,6 +7,7 @@ GOFILES=\
 	request_map.go\
 	timeformats.go\
 	akidentity.go\
+	misc.go\
 
 DEPS=awsconn
 
