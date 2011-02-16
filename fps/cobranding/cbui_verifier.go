@@ -49,7 +49,9 @@ func (self CBUIReturnVerifier)ServeHTTP(rw http.ResponseWriter, req *http.Reques
       "Version": []string{"2008-09-17"},
     }),
   }
-  self.Logger.Printf("Verifying signature from %s {{ %s }}", self.GatewayURL.String(), vurl.String())
+  
+  self.Logger.Printf("Verifying signature from %s", self.GatewayURL.String())
+  
   resp, _, err := http.Get(vurl.String())
   if err != nil {
     self.Logger.Printf("Get Failed: %v", err)
