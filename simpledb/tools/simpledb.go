@@ -22,8 +22,6 @@ var Item     = flag.String("item","","Item name")
 var Select   = flag.String("select","","Select query")
 var Domain = flag.String("domain", "", "Domain name")
 var DBUrl  = flag.String("DBUrl", "http://sdb.amazonaws.com", "SQS Endpoint")
-var AccessKey  = flag.String("access-key-id", "", "Access key")
-var SecretAccessKey  = flag.String("secret-access-key", "", "Secret access key")
 
 func FlagAttributes()(out []simpledb.Attribute, err os.Error){
   args := flag.Args()
@@ -39,12 +37,13 @@ func FlagAttributes()(out []simpledb.Attribute, err os.Error){
 }
 
 func main(){
+  aws.AwsIDFlags()
   flag.Parse()
   url, err := http.ParseURL(*DBUrl)
   if err != nil {
     log.Fatalf("DBUrl (%s) invalid: (%v)", *DBUrl, err)
   }
-  s, err := aws.NewIdentity("sha256", *AccessKey, *SecretAccessKey)
+  s, err := aws.DefaultIdentity("sha256")
   if err != nil {
     log.Fatalf("Couldn't create identity: %v", err)
   }
