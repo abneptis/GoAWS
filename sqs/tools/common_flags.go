@@ -81,7 +81,7 @@ func GetQueue()(Q *sqs.Queue, err os.Error){
       _sqs := sqs.NewService(ep)
       Q, err = _sqs.CreateQueue(id, *queueName, 90)
       if err != nil {
-        log.Exitf("Qerr: [%v]", err)
+        log.Fatalf("Qerr: [%v]", err)
       }
     }
   } else {

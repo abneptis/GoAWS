@@ -41,7 +41,7 @@ func SendRequest(cc *http.ClientConn, req *http.Request)(resp *http.Response, er
   //os.Stderr.Write(bb)
   err = cc.Write(req)
   if err == nil {
-    resp, err = cc.Read()
+    resp, err = cc.Read(req)
   }
   //bb, _ = http.DumpResponse(resp, true)
   //os.Stderr.Write(bb)
@@ -148,7 +148,7 @@ func (self *Endpoint)SendParsable(req *http.Request, out interface{}, etype os.E
 
 // Create an HTTP request with appropriate details pulled from the local 
 // endpoint and other details.
-func (self *Endpoint)NewHTTPRequest(method string, path string, params map[string][]string, headers map[string]string)(req *http.Request){
+func (self *Endpoint)NewHTTPRequest(method string, path string, params map[string][]string, headers map[string][]string)(req *http.Request){
   req = &http.Request {
     Method: method,
     Form: params,
@@ -160,7 +160,7 @@ func (self *Endpoint)NewHTTPRequest(method string, path string, params map[strin
       Path: path,
     },
   }
-  if req.Header == nil { req.Header = make(map[string]string) }
+  if req.Header == nil { req.Header = make(map[string][]string) }
   if req.Form   == nil { req.Form   = make(map[string][]string) }
   return
 }
@@ -168,12 +168,18 @@ func (self *Endpoint)NewHTTPRequest(method string, path string, params map[strin
 // Returns the value of the ContentType header (or the empty string).
 // Primarily a helper for canonicalization routines.
 func ContentType(req *http.Request)(string){
-  return req.Header["Content-Type"]
+  if len(req.Header["Content-Type"]) > 0 {
+    return req.Header["Content-Type"][0]
+  }
+  return ""
 }
 
 // Returns the value of the ContentMd5 header (or the empty string).
 // Primarily a helper for canonicalization routines.
 func ContentMD5(req *http.Request)(string){
-  return req.Header["Content-Md5"]
+  if len(req.Header["Content-Md5"]) > 0 {
+    return req.Header["Content-Md5"][0]
+  }
+  return ""
 }
 

@@ -12,7 +12,7 @@ func main(){
   flag.Parse()
   q, err := GetQueue()
   if err != nil {
-    log.Exitf("Couldn't create queue: %v\n", err)
+    log.Fatalf("Couldn't create queue: %v\n", err)
   }
   fmt.Printf("%v\n", q.Name)
 }
