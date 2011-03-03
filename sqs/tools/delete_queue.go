@@ -11,14 +11,14 @@ func main(){
   flag.Parse()
   q, err := GetQueue()
   if err != nil {
-    log.Exitf("Couldn't get queue: %v\n", err)
+    log.Fatalf("Couldn't get queue: %v\n", err)
   }
   id, err := GetAWSIdentity()
   if err != nil {
-    log.Exitf("Unable to get AWS identity: %v\n", err)
+    log.Fatalf("Unable to get AWS identity: %v\n", err)
   }
   err = q.Delete(id)
   if err != nil {
-    log.Exitf("Failed to delete queue: %v\n", err)
+    log.Fatalf("Failed to delete queue: %v\n", err)
   }
 }

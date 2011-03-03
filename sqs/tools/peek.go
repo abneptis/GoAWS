@@ -17,15 +17,15 @@ func main(){
   flag.Parse()
   q, err := GetQueue()
   if err != nil {
-    log.Exitf("Couldn't create queue: %v\n", err)
+    log.Fatalf("Couldn't create queue: %v\n", err)
   }
   id, err := GetAWSIdentity()
   if err != nil {
-    log.Exitf("Couldn't get identity: %v\n", err)
+    log.Fatalf("Couldn't get identity: %v\n", err)
   }
   msgs, err := q.FetchMessages(id, *max, *timeout)
   if err != nil {
-    log.Exitf("Couldn't pop from queue: %v\n", err)
+    log.Fatalf("Couldn't pop from queue: %v\n", err)
   }
   log.Printf("#[%d messages received]", len(msgs))
   _form := *outform
@@ -47,7 +47,7 @@ func main(){
   if _form == "json" {
     enc := json.NewEncoder(os.Stdout)
     err := enc.Encode(msgs)
-    if err != nil { log.Exitf("Error decoding messages: %v", err) }
+    if err != nil { log.Fatalf("Error decoding messages: %v", err) }
   }
 }
 

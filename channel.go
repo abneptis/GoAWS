@@ -54,7 +54,7 @@ func (self *SignedChannel)writeRequest(req *http.Request)(resp *http.Response, e
     updateRawQuery(req)
     err = c.Write(req)
     if err == nil {
-      resp, err = c.Read()
+      resp, err = c.Read(req)
     }
     if err != nil {
       if err == http.ErrPersistEOF {
