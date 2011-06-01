@@ -63,7 +63,7 @@ func (self Connection)WriteRequest(req *http.Request)(resp *http.Response, err o
     }
   }
   if err == nil {
-    resp, err = c.Read()
+    resp, err = c.Read(req)
     if err != nil {
       err = self.abortConnection(err)
       // PersistantEOF is NOT an invalid condition for the request, it simply invalidates the ClientConn.
