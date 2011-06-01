@@ -48,7 +48,7 @@ func main(){
     log.Fatalf("Couldn't create identity: %v", err)
   }
   ep := awsconn.NewEndpoint(url, nil)
-  dbh := simpledb.NewHandler(simpledb.NewConnection(*ep, "tcp", ""), s)
+  dbh := simpledb.NewHandler(*ep, s)
   if *DoCreate {
     _, err = dbh.CreateDomain(*Domain)
     if err != nil {

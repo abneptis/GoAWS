@@ -1,23 +1,24 @@
 package simpledb
 
 import "com.abneptis.oss/cryptools"
+import "com.abneptis.oss/aws/awsconn"
 
 import "http"
 import "os"
 import "strconv"
 
 type Handler struct {
-  conn AWSConnection
+  conn awsconn.Endpoint
   signer cryptools.NamedSigner
 }
 
-func NewHandler(c AWSConnection, a cryptools.NamedSigner)(*Handler){
+func NewHandler(c awsconn.Endpoint, a cryptools.NamedSigner)(*Handler){
   return &Handler{ conn: c, signer: a}
 }
 
 func (self *Handler)doRequest(req *http.Request)(response SimpledbResponse, err os.Error){
  var resp *http.Response
- resp, err = self.conn.WriteRequest(req)
+ resp, err = self.conn.SendRequest(req)
  if err == nil {
    response, err = ((*Response)(resp)).ParseResponse()
  }
@@ -31,7 +32,7 @@ func (self *Handler)ListDomains(start string, max int)(domains []string, err os.
   if max != 0 { parms["MaxNumberOfDomains"] = strconv.Itoa(max) }
   if start != "" { parms["NextToken"] = start }
 
-  req, err := newQuery(self.signer, self.conn.Endpoint(), "", "ListDomains", parms)
+  req, err := newQuery(self.signer, self.conn, "", "ListDomains", parms)
   if err == nil {
     response, err = self.doRequest(req)
     if err == nil {
@@ -42,7 +43,7 @@ func (self *Handler)ListDomains(start string, max int)(domains []string, err os.
 }
 
 func (self *Handler)CreateDomain(dn string)(response SimpledbResponse, err os.Error){
-  req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "CreateDomain", nil)
+  req, err := newQuery(self.signer, self.conn, dn, "CreateDomain", nil)
   if err == nil {
     response, err = self.doRequest(req)
   }
@@ -50,7 +51,7 @@ func (self *Handler)CreateDomain(dn string)(response SimpledbResponse, err os.Er
 }
 
 func (self *Handler)DeleteDomain(dn string)(response SimpledbResponse, err os.Error){
-  req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "DeleteDomain", nil)
+  req, err := newQuery(self.signer, self.conn, dn, "DeleteDomain", nil)
   if err == nil {
     response, err = self.doRequest(req)
   }
@@ -80,7 +81,7 @@ func (self *Handler)PutAttributes(dn string, in string, attrs, expected Attribut
        }
     }
   }
-  req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "PutAttributes", parms)
+  req, err := newQuery(self.signer, self.conn, dn, "PutAttributes", parms)
   if err == nil {
     _, err = self.doRequest(req)
   }
@@ -97,7 +98,7 @@ func (self *Handler)GetAttributes(dn string, in string, attrs []string, consiste
   if consistent {
     parms["ConsistentRead"] = "true"
   }
-  req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "GetAttributes", parms)
+  req, err := newQuery(self.signer, self.conn, dn, "GetAttributes", parms)
   var response SimpledbResponse
   if err == nil {
     response, err = self.doRequest(req)
@@ -116,7 +117,7 @@ func (self *Handler)Select(expression, next string, consistent bool)(out []Item,
   if consistent {
     parms["ConsistentRead"] = "true"
   }
-  req, err := newQuery(self.signer, self.conn.Endpoint(), "", "Select", parms)
+  req, err := newQuery(self.signer, self.conn, "", "Select", parms)
   var response SimpledbResponse
   if err == nil {
     response, err = self.doRequest(req)
@@ -150,7 +151,7 @@ func (self *Handler)DeleteAttributes(dn string, in string, attrs, expected Attri
        }
     }
   }
-  req, err := newQuery(self.signer, self.conn.Endpoint(), dn, "DeleteAttributes", parms)
+  req, err := newQuery(self.signer, self.conn, dn, "DeleteAttributes", parms)
   if err == nil {
     _, err = self.doRequest(req)
   }
