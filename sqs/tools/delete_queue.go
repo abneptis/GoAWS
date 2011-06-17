@@ -1,13 +1,14 @@
 package main
 
 
-//import "com.abneptis.oss/aws"
+import "com.abneptis.oss/aws"
 //import "com.abneptis.oss/aws/sqs"
 //import "http"
 import "flag"
 import "log"
 
 func main(){
+  aws.AwsIDFlags()
   flag.Parse()
   q, err := GetQueue()
   if err != nil {

@@ -20,8 +20,6 @@ import "os"
 import "log"
 
 
-var secretKeyId = flag.String("secret-key","","Secret key ID")
-var accessKeyId = flag.String("access-key","","Access key ID")
 var queueName = flag.String("queue","","Name of the queue to use")
 var queueURL  = flag.String("queue-url","","Direct queue URL")
 var sqsEndpoint = flag.String("endpoint","http://queue.amazonaws.com/","SQS Endpoint")
@@ -55,10 +53,8 @@ func GetSQSService()(s *sqs.Service, err os.Error){
 }
 
 func GetAWSIdentity()(s cryptools.NamedSigner, err os.Error){
-  if accessKeyId == nil || secretKeyId == nil || *accessKeyId == "" || *secretKeyId == "" {
-   return nil, os.NewError("-access-key and -secret-key are both required")
-  }
-  return aws.NewIdentity("sha256", *accessKeyId, *secretKeyId)
+  return aws.DefaultIdentity("sha256")
+  // return aws.NewIdentity("sha256", *accessKeyId, *secretKeyId)
 }
 
 

@@ -16,7 +16,7 @@ func GetMessageReadCloser()(rc io.ReadCloser, err os.Error){
   if messageFile == nil || *messageFile == "-" {
     rc = os.Stdin
   } else {
-    rc, err = os.Open(*messageFile, os.O_RDONLY, 0)
+    rc, err = os.Open(*messageFile)
   }
   return
 }

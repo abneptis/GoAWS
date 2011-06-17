@@ -1,6 +1,6 @@
 package main
 
-//import "com.abneptis.oss/aws"
+import "com.abneptis.oss/aws"
 //import "com.abneptis.oss/aws/sqs"
 import "http"
 import "json"
@@ -14,6 +14,7 @@ var timeout = flag.Int("fetch-timeout", -1, "MessageVisibilityTimeout (-1 for qu
 var outform = flag.String("outform", "text", "Output format (*text|shell|json|raw)")
 
 func main(){
+  aws.AwsIDFlags()
   flag.Parse()
   q, err := GetQueue()
   if err != nil {

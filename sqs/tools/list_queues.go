@@ -1,7 +1,7 @@
 package main
 
 
-//import "com.abneptis.oss/aws"
+import "com.abneptis.oss/aws"
 //import "com.abneptis.oss/aws/sqs"
 //import "http"
 import "flag"
@@ -9,6 +9,7 @@ import "fmt"
 import "log"
 
 func main(){
+  aws.AwsIDFlags()
   flag.Parse()
   id, err := GetAWSIdentity()
   if err != nil {

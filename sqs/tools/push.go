@@ -1,10 +1,12 @@
 package main
 
+import "com.abneptis.oss/aws"
 import "flag"
 import "log"
 import "fmt"
 
 func main(){
+  aws.AwsIDFlags()
   flag.Parse()
   q, err := GetQueue()
   if err != nil {
