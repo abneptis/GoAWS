@@ -4,6 +4,7 @@ import (
   "net"
   "os"
   "sync"
+//  "log"
 )
 
 var ErrUnderlyingNotconnected = os.NewError("Underlying socket is not connected")
@@ -37,6 +38,7 @@ func NewReusableConnection(d Dialer)(c *ReusableConn){
 
 // Dial is idempotent, and safe to call;
 func (self *ReusableConn)Dial()(err os.Error){
+  // log.Printf("Public Dial() called")
   self.lock.Lock()
   defer self.lock.Unlock()
   return self.dial()
@@ -47,6 +49,7 @@ func (self *ReusableConn)Dial()(err os.Error){
 // 
 // It simply returns nil if the socket appears already connected
 func (self *ReusableConn)dial()(err os.Error){
+  // log.Printf("Private dial() called (%v)", self.conn)
   if self.conn == nil {
     self.conn, err = self.dialer()
     if err == nil && self.readTimeout != _UNSET_TIMEOUT {
@@ -56,6 +59,7 @@ func (self *ReusableConn)dial()(err os.Error){
       err = self.setWriteTimeout(self.writeTimeout)
     }
   }
+  // log.Printf("Private dial() complete (%v)", self.conn)
   return
 }
 

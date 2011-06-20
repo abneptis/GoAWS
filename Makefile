@@ -1,8 +1,12 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=com.abneptis.oss/aws
+TARG=aws
 GOFILES=\
 	channel.go\
+	dialer.go\
+	http_dialer.go\
+	signer.go\
+	\
 	escape.go\
 	request_map.go\
 	timeformats.go\
