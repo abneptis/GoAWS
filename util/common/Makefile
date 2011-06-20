@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=common
+TARG=aws/util/common
 GOFILES=common.go\
 
 DEPS=\

@@ -8,9 +8,8 @@ import (
 // Common functionality to ease sub-modules
 
 type UserCall struct {
-  Name string
   Args []flag.Flag
-  f    func()(os.Error)
+  F    func()(os.Error)
 }
 
 type Calls map[string]UserCall

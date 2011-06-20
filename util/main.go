@@ -1,8 +1,12 @@
 package main
 
 import (
+  . "aws/flags" // AWS ID Flags
+  "aws/s3/s3_util"
+)
+
+import (
   "flag"
-  "s3_util"
   "os"
   "fmt"
 )
@@ -10,15 +14,21 @@ import (
 func main(){
   flag.Parse()
   if flag.NArg() == 0 {
-    fmt.Printf("USAGE: aws [sqs|s3|ec2] ...\n")
+    fmt.Printf("USAGE: aws [s3] ...\n")
     os.Exit(1)
   }
   cmd := flag.Arg(0)
-  fmt.Printf("RawArgs: %v\n", os.Args) 	
+  // fmt.Printf("RawArgs: %v\n", os.Args) 	
   os.Args = os.Args[1:]
+  var err os.Error
   switch cmd {
-    case "s3": s3_util.Main()
-    default: fmt.Printf("Unknown module: %s\n", cmd)
+    case "s3": err = s3_util.Main()
+    default: err = os.NewError("Unknown module:" + cmd)
   }
-  os.Exit(1)
+  if err != nil {
+    fmt.Printf("Error: %v\n", err)
+    os.Exit(1)
+  }
+  os.Exit(0)
+  UseFlags() // we want the side effects of import...
 }
