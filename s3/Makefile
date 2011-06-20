@@ -7,10 +7,10 @@ DEPS=\
 
 GOFILES=\
         consts.go\
-	list_buckets.go\
 	canonical.go\
 	request.go\
 	service_opers.go\
+	bucket_opers.go\
 
 include $(GOROOT)/src/Make.pkg
 
