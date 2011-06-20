@@ -104,7 +104,7 @@ func (self *Endpoint)GetURL()(out *http.URL){
 func (self *Endpoint)NewConn(netname, local string)(rawc net.Conn, err os.Error){
   hps, err := urltools.ExtractURLHostPort(self.ConnectionURL())
   if err == nil {
-    rawc, err = net.Dial(netname, local, hps)
+    rawc, err = net.Dial(netname, hps)
   }
   return
 }
