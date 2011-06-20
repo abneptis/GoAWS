@@ -75,6 +75,7 @@ func (self *Service)signedRequest(id cryptools.NamedSigner, path string, params 
   err = SignRequest(id, req)
   return
 }
+AWSAccessKeyId=AKIAJVBFI6WMZSSBBFRQ&Action=CreateQueue&DefaultVisibilityTimeout=90&Expires=1308608836&QueueName=tQueue&Signature=MBRoW9AdUfDv%2Fk%2BnGDmmeZOZqjbPVARKtvnbT2yB0RI%3D&SignatureMethod=HmacSHA256&SignatureVersion=2&Version=2009-02-01
 
 
 // Create a queue, returning the Queue object.
