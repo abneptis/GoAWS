@@ -1,8 +1,9 @@
 package aws
 
 import (
+  "crypto/tls"
   "http"
-//  "log"
+  "net"
   "os"
 )
 
@@ -32,7 +33,7 @@ func (self *Conn)dial()(err os.Error){
 func (self *Conn)Request(req *http.Request)(resp *http.Response, err os.Error){
   err = self.dial()
   if err == nil {
-    if req.Form != nil {
+    if req.Form != nil && req.Method == "GET" {
       if req.URL.RawQuery != "" {
         req.URL.RawQuery += "&"
       }
@@ -50,3 +51,23 @@ func (self *Conn)Request(req *http.Request)(resp *http.Response, err os.Error){
   return
 }
 
+
+func URLDialer(u *http.URL, conf *tls.Config)(f func()(c net.Conn, err os.Error)){
+  host, port, _ := net.SplitHostPort(u.Host)
+  if port == "" {
+    if u.Scheme == "http" { port = "80" }
+    if u.Scheme == "https" { port = "443" }
+  }
+  if host == "" {
+    host = u.Host
+  }
+  useTLS := (u.Scheme == "https")
+
+  f = func()(c net.Conn, err os.Error){
+    if useTLS {
+      return tls.Dial("tcp", host + ":" + port, conf)
+    }
+    return net.Dial("tcp", host + ":" + port)
+  }
+  return
+}
