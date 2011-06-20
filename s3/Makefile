@@ -1,11 +1,16 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=com.abneptis.oss/aws/s3
-GOFILES=service.go\
-	bucket.go\
-	object.go\
-	errors.go\
-	query_request.go\
+TARG=aws/s3
+
+DEPS=\
+	../
+
+GOFILES=\
+        consts.go\
+	list_buckets.go\
+	canonical.go\
+	request.go\
+	service_opers.go\
 
 include $(GOROOT)/src/Make.pkg
 

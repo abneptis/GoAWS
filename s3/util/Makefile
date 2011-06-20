@@ -1,11 +1,13 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=s3_util
+TARG=aws/s3/s3_util
 GOFILES=s3_main.go\
 
 DEPS=\
 	../\
 	../../\
+	../../flags/\
+	../../util/common/\
 
 CLEANFILES+=\
 
