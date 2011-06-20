@@ -3,6 +3,7 @@ package main
 import (
   . "aws/flags" // AWS ID Flags
   "aws/s3/s3_util"
+  "aws/sqs/sqs_util"
 )
 
 import (
@@ -23,6 +24,7 @@ func main(){
   var err os.Error
   switch cmd {
     case "s3": err = s3_util.Main()
+    case "sqs": err = sqs_util.Main()
     default: err = os.NewError("Unknown module:" + cmd)
   }
   if err != nil {
