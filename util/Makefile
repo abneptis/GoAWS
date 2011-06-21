@@ -6,6 +6,7 @@ GOFILES=main.go\
 DEPS=\
 	../s3/util/\
 	../sqs/util/\
+	../sdb/util/\
 	../flags/\
 
 CLEANFILES+=\

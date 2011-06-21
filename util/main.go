@@ -4,6 +4,7 @@ import (
   . "aws/flags" // AWS ID Flags
   "aws/s3/s3_util"
   "aws/sqs/sqs_util"
+  "aws/sdb/sdb_util"
 )
 
 import (
@@ -15,7 +16,7 @@ import (
 func main(){
   flag.Parse()
   if flag.NArg() == 0 {
-    fmt.Printf("USAGE: aws [s3] ...\n")
+    fmt.Printf("USAGE: aws [s3|sqs|sdb] ...\n")
     os.Exit(1)
   }
   cmd := flag.Arg(0)
@@ -25,6 +26,7 @@ func main(){
   switch cmd {
     case "s3": err = s3_util.Main()
     case "sqs": err = sqs_util.Main()
+    case "sdb": err = sdb_util.Main()
     default: err = os.NewError("Unknown module:" + cmd)
   }
   if err != nil {
