@@ -7,11 +7,14 @@ import (
   "os"
 )
 
+// The conn structure represents a 'semi detached' http-client
+// It handles redialing & reconnecting on connection errors.
 type Conn struct {
   uc *ReusableConn
   c  *http.ClientConn
 }
 
+// Creates a new connection with the specified dialer function.
 func NewConn(d Dialer)(*Conn){
   return &Conn {
     uc: NewReusableConnection(d),
@@ -30,6 +33,8 @@ func (self *Conn)dial()(err os.Error){
   return
 }
 
+// Write a request and read the response;
+// This function will also fix-up req.Form for 'GET's
 func (self *Conn)Request(req *http.Request)(resp *http.Response, err os.Error){
   err = self.dial()
   if err == nil {
@@ -52,6 +57,7 @@ func (self *Conn)Request(req *http.Request)(resp *http.Response, err os.Error){
 }
 
 
+// A generic Dialer to handle both TLS and non TLS http connections.
 func URLDialer(u *http.URL, conf *tls.Config)(f func()(c net.Conn, err os.Error)){
   host, port, _ := net.SplitHostPort(u.Host)
   if port == "" {
