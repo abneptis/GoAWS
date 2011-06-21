@@ -9,7 +9,13 @@ import (
   "sort"
 )
 
-
+// (2011-06-21) - The standard go http.Values.Escape
+// works properly for SQS  and S3, but it should be
+// noted that at least SDB requiers more to be escaped
+// than is officially standard.
+//
+// Sorted Escape also sorts the keys before joining them (needed
+// for canonicalization).
 func SortedEscape(v http.Values)(out string){
   keys := []string{}
   for k, _ := range(v){
