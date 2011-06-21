@@ -66,7 +66,7 @@ func (self *Bucket)PutFile(id *aws.Signer, key string, fp *os.File)(err os.Error
     err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
     if err == nil {
       resp, err = self.conn.Request(hreq)
-      if err == nil { err = CodeToError(resp.StatusCode) }
+      if err == nil { err = aws.CodeToError(resp.StatusCode) }
     }
   }
   return
@@ -84,7 +84,7 @@ func (self *Bucket)Delete(id *aws.Signer, key string)(err os.Error){
   }
   if err == nil {
     if resp.StatusCode != http.StatusNoContent {
-      err = CodeToError(resp.StatusCode)
+      err = aws.CodeToError(resp.StatusCode)
     }
   } 
 
@@ -99,7 +99,7 @@ func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(http.Header, 
     resp, err = self.conn.Request(hreq)
   }
   if err == nil {
-    err = CodeToError(resp.StatusCode)
+    err = aws.CodeToError(resp.StatusCode)
   } 
 
   if resp != nil {
@@ -117,7 +117,7 @@ func (self *Bucket)Exists(id *aws.Signer, key string)(err os.Error){
     resp, err = self.conn.Request(hreq)
   }
   if err == nil {
-    err = CodeToError(resp.StatusCode)
+    err = aws.CodeToError(resp.StatusCode)
   } 
   return
 }
@@ -147,7 +147,7 @@ func (self *Bucket)ListKeys(id *aws.Signer,
       resp, err = self.conn.Request(hreq)
     }
     if err == nil {
-      err = CodeToError(resp.StatusCode)
+      err = aws.CodeToError(resp.StatusCode)
     } 
     if err == nil {
       err = xml.Unmarshal(resp.Body, &result)
