@@ -102,7 +102,7 @@ func (self *Bucket)Delete(id *aws.Signer, key string)(err os.Error){
 
 // Opens the named key and copys it to the named io.Writer.
 // Also returns the http headers for convenience.
-func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(http.Header, err os.Error){
+func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(hdr http.Header, err os.Error){
   var resp *http.Response
   hreq := aws.NewRequest(self.key_url(key), "GET", nil, nil)
   err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
@@ -111,6 +111,7 @@ func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(http.Header, 
   }
   if err == nil {
     err = aws.CodeToError(resp.StatusCode)
+    hdr = resp.Header
   } 
 
   if resp != nil {
