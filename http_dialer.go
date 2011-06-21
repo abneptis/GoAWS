@@ -71,3 +71,18 @@ func URLDialer(u *http.URL, conf *tls.Config)(f func()(c net.Conn, err os.Error)
   }
   return
 }
+
+// Constructs a basic http.Request based off of a fully-qualified URL
+func NewRequest(url *http.URL, method string, hdrs http.Header, params http.Values)(*http.Request){
+  return &http.Request {
+    Method: method,
+    URL: &http.URL {
+      Path: url.Path,
+      RawQuery: url.RawQuery,
+    },
+    Host: url.Host,
+    Header: hdrs,
+    Form: params,
+  }
+}
+
