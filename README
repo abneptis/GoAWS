@@ -1,11 +1,20 @@
+BREAKAGE WARNING!
+=================
+  The API is going under some substantial cleanups;  If you are building from sources prior to Jun 20, 2011,
+you will likely find near-zero one-one compatibility.
+  - Generally, the new API's are applied to SQS, S3 and SDB (in progress)
+  - Check godoc for the new structures & shapes.
+  - The tools have been aggregated into a single built tool (in progress)
+
+
   After several revisions (read: rewrites), I finally have some AWS tools
 I'm happy with the form of.
 
   Some key functions are not yet implemented (ACL's, subresources), 
 and most of it is not yet thoroughly tested outside the direct 
-paths required for the command line tools.
+paths required for the command line tool.
 
-  For quick usage examples, see {elb,s3,simpledb,sqs}/tools/*.go.  The tools are 
+  For quick usage examples, see {elb,s3,simpledb,sqs}/util/*.go.  The tools are 
 fully capable of basic administration of ELB, S3, SQS, and SimpleDB resources, but 
 are intended primarily for testing and API usage examples.
 
