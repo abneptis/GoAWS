@@ -1,32 +1,32 @@
 package s3_util
 
 import (
-  "aws"
   "aws/s3"
   . "aws/flags"
   . "aws/util/common"
 )
 
 import (
-  "crypto/tls"
   "flag"
   "fmt"
-  "net"
+  "http"
   "os"
   "path"
 )
 
 func Main()(err os.Error){
+  s3_ep := flag.String("s3-endpoint", "https://" + s3.USEAST_HOST + "/", "S3 Endpoint to use")
   flag.Parse()
+  var svc *s3.Service
+
+  s3_url, err := http.ParseURL(*s3_ep)
+
+  if err != nil { return }
 
   if flag.NArg() == 0 {
-    fmt.Printf("USAGE: s3 [list|get|put] [...]\n")
-    os.Exit(1)
+    return os.NewError("USAGE: s3 [list|get|put] [...]")
   }
-
-  c := aws.NewConn(func()(c net.Conn, err os.Error){
-    return tls.Dial("tcp", "s3.amazonaws.com:443", nil)
-  })
+  svc = s3.NewService(s3_url)
 
   signer, err := DefaultSigner()
   if err != nil {
@@ -44,14 +44,14 @@ func Main()(err os.Error){
             fmt.Printf("%s\n", i)
           }
         }()
-        err = s3.ListKeys(signer, c, bucket,"", "", "", keys) 
+        err = svc.Bucket(bucket).ListKeys(signer, "", "", "", keys) 
         close(keys)
         return
       },
     },
-    "list_buckets": UserCall{
+    "buckets": UserCall{
       F: func()(err os.Error){
-        lb, err := s3.ListBuckets(signer, c)
+        lb, err := svc.ListBuckets(signer)
         for b := range(lb) {
           fmt.Println(lb[b])
         }
@@ -66,45 +66,36 @@ func Main()(err os.Error){
           return os.NewError("Usage: get BUCKET KEY")
         }
         if err == nil {
-          _, err = s3.GetKey(signer, c, bucket, key, os.Stdout)
+          _, err = svc.Bucket(bucket).GetKey(signer, key, os.Stdout)
         }
         return
       },
     },
-    "key_exists": UserCall{
+    "exists": UserCall{
       F: func()(err os.Error){
         bucket := flag.Arg(1)
         key    := flag.Arg(2)
         if bucket == "" || key == "" {
-          fmt.Printf("Usage: key_exists BUCKET KEY\n")
+          fmt.Printf("Usage: exists BUCKET KEY\n")
           os.Exit(1)
         }
-        err = s3.KeyExists(signer, c, bucket, key)
+        err = svc.Bucket(bucket).Exists(signer, key)
+        return
+      },
+    },
+    "drop": UserCall{
+      F: func()(err os.Error){
+        bucket := flag.Arg(1)
+        if bucket == "" { return os.NewError("Usage: drop BUCKET") }
+        err = svc.DeleteBucket(signer, bucket)
         return
       },
     },
     "create": UserCall{
       F: func()(err os.Error){
         bucket := flag.Arg(1)
-        if bucket == "" { 
-          return os.NewError("Usage: create BUCKET")
-        }
-        err = s3.CreateBucket(signer, c, bucket)
-        return
-      },
-    },
-    "delete": UserCall{
-      F: func()(err os.Error){
-        bucket := flag.Arg(1)
-        if bucket == "" || flag.NArg() < 3 { 
-          return os.NewError("Usage: delete BUCKET KEY [KEY2...]")
-        }
-        keys := flag.Args()[2:]
-        for key := range(keys){
-          if err = s3.DeleteKey(signer, c, bucket, keys[key]) ; err != nil {
-            return
-          }
-        }
+        if bucket == "" { return os.NewError("Usage: create BUCKET") }
+        err = svc.CreateBucket(signer, bucket)
         return
       },
     },
@@ -116,7 +107,7 @@ func Main()(err os.Error){
         }
         keys := flag.Args()[2:]
         for i := range(keys){
-          err = s3.DeleteKey(signer, c, bucket, keys[i])
+          err = svc.Bucket(bucket).Delete(signer, keys[i])
           if err != nil { break }
         }
         return
@@ -131,9 +122,7 @@ func Main()(err os.Error){
         }
         keys := flag.Args()[3:]
         for i := range(keys){
-          err = s3.PutLocalFile(signer, c, bucket,
-             path.Join(prefix, path.Base(keys[i])),
-             keys[i])
+          err = svc.Bucket(bucket).PutLocalFile(signer, path.Join(prefix, path.Base(keys[i])), keys[i])
           if err != nil { break }
         }
         return

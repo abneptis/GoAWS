@@ -5,22 +5,53 @@ import (
   "http"
   "io"
   "os"
+  "path"
   "xml"
 )
 
-func PutLocalFile(id *aws.Signer, c *aws.Conn, bucket, key, file string)(err os.Error){
-  fp, err := os.Open(file)
-  if err == nil {
-    defer fp.Close()
-    err = PutFile(id,c,bucket,key,fp)
+type Bucket struct {
+  Name string
+  URL  *http.URL
+  conn *aws.Conn
+}
+
+
+// URL is the _endpoint_ url (nil will default to https://s3.amazonaws.com/)
+// Name should be the bucket name; If you pass this as an empty string, you will regret it.
+// conn is OPTIONAL, but allows you to re-use another aws.Conn if you'd like.
+func NewBucket(u *http.URL, Name string, conn *aws.Conn)(b *Bucket){
+  if u == nil {
+    u = &http.URL{Scheme:"https", Host: USEAST_HOST, Path: "/"}
+  }
+  if conn == nil {
+    conn = aws.NewConn(aws.URLDialer(u, nil))
+  }
+  b = &Bucket {
+    URL: u,
+    Name: Name,
+    conn: conn,
   }
   return
 }
 
-func PutFile(id *aws.Signer, c *aws.Conn, bucket, key string, fp *os.File)(err os.Error){
-  if key == "" || key == "/" || bucket == "" {
-    return os.NewError("Bucket and key are required (and cannot be '/')")
+func (self *Bucket)key_url(key string)(*http.URL){
+  return &http.URL {
+    Scheme: self.URL.Scheme,
+    Host: self.URL.Host,
+    Path: path.Join(self.URL.Path, self.Name, key),
   }
+}
+
+func (self *Bucket)PutLocalFile(id *aws.Signer, key, file string)(err os.Error){
+  fp, err := os.Open(file)
+  if err == nil {
+    defer fp.Close()
+    err = self.PutFile(id, key,fp)
+  }
+  return
+}
+
+func (self *Bucket)PutFile(id *aws.Signer, key string, fp *os.File)(err os.Error){
   var resp *http.Response
   if fp == nil {
     return os.NewError("invalid file descriptor")
@@ -29,28 +60,27 @@ func PutFile(id *aws.Signer, c *aws.Conn, bucket, key string, fp *os.File)(err o
   if err == nil {
     fsize := fi.Size
     hdr := http.Header{}
-    hreq := newRequest("PUT", bucket, key, hdr, nil)
+    hreq := aws.NewRequest(self.key_url(key), "PUT", hdr, nil)
     hreq.ContentLength = fsize
     hreq.Body = fp
-    err = signRequest(id, hreq)
+    err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
     if err == nil {
-      resp, err = c.Request(hreq)
+      resp, err = self.conn.Request(hreq)
       if err == nil { err = CodeToError(resp.StatusCode) }
     }
   }
   return
 }
 
-func DeleteKey(id *aws.Signer, c *aws.Conn, bucket, key string)(err os.Error){
+func (self *Bucket)Delete(id *aws.Signer, key string)(err os.Error){
   var resp *http.Response
-  if bucket == "" || key == "" {
-    err = os.NewError("Bucket/Key both required")
-    return
+  if key == "" {
+    return os.NewError("Key cannot be empty!")
   }
-  hreq := newRequest("DELETE", bucket, key, nil, nil)
-  err = signRequest(id, hreq)
+  hreq := aws.NewRequest(self.key_url(key), "DELETE", nil, nil)
+  err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
   if err == nil {
-    resp, err = c.Request(hreq)
+    resp, err = self.conn.Request(hreq)
   }
   if err == nil {
     if resp.StatusCode != http.StatusNoContent {
@@ -61,12 +91,12 @@ func DeleteKey(id *aws.Signer, c *aws.Conn, bucket, key string)(err os.Error){
   return
 }
 
-func GetKey(id *aws.Signer, c *aws.Conn, bucket, key string, w io.Writer)(http.Header, err os.Error){
+func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(http.Header, err os.Error){
   var resp *http.Response
-  hreq := newRequest("GET", bucket, key, nil, nil)
-  err = signRequest(id, hreq)
+  hreq := aws.NewRequest(self.key_url(key), "GET", nil, nil)
+  err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
   if err == nil {
-    resp, err = c.Request(hreq)
+    resp, err = self.conn.Request(hreq)
   }
   if err == nil {
     err = CodeToError(resp.StatusCode)
@@ -79,12 +109,12 @@ func GetKey(id *aws.Signer, c *aws.Conn, bucket, key string, w io.Writer)(http.H
   return
 }
 
-func KeyExists(id *aws.Signer, c *aws.Conn, bucket, key string)(err os.Error){
+func (self *Bucket)Exists(id *aws.Signer, key string)(err os.Error){
   var resp *http.Response
-  hreq := newRequest("HEAD", bucket, key, nil, nil)
-  err = signRequest(id, hreq)
+  hreq := aws.NewRequest(self.key_url(key), "HEAD", nil, nil)
+  err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
   if err == nil {
-    resp, err = c.Request(hreq)
+    resp, err = self.conn.Request(hreq)
   }
   if err == nil {
     err = CodeToError(resp.StatusCode)
@@ -97,7 +127,7 @@ type owner struct {
   DisplayName string
 }
 
-func ListKeys(id *aws.Signer, c *aws.Conn, bucket string,
+func (self *Bucket)ListKeys(id *aws.Signer,
               prefix, delim, marker string, out chan<- string)(err os.Error){
   var done bool
   var resp *http.Response
@@ -109,10 +139,12 @@ func ListKeys(id *aws.Signer, c *aws.Conn, bucket string,
     form.Set("prefix", result.Prefix)
     form.Set("marker", result.Marker)
     form.Set("delimeter", delim)
-    hreq := newRequest("GET", bucket,"/",nil,form)
-    err = signRequest(id, hreq)
+
+    hreq := aws.NewRequest(self.key_url("/"), "GET", nil, form)
+    err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
+
     if err == nil {
-      resp, err = c.Request(hreq)
+      resp, err = self.conn.Request(hreq)
     }
     if err == nil {
       err = CodeToError(resp.StatusCode)

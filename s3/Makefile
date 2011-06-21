@@ -7,8 +7,6 @@ DEPS=\
 
 GOFILES=\
         consts.go\
-	canonical.go\
-	request.go\
 	service_opers.go\
 	bucket_opers.go\
 
