@@ -1,5 +1,10 @@
 package flags
 
+// The flags module is primarily a convenience module for those
+// who want to request the AWS identity on the command line
+// It should be noted that this approach is not particularly secure
+// against a malicious root, but very little is.
+
 import (
   "aws"
 )
@@ -15,6 +20,7 @@ var accessKey *string = flag.String("aws-access-key",
 var secretKey *string = flag.String("aws-secret-key", 
                os.Getenv("AWS_SECRET_ACCESS_KEY"), "AWS Secret Key")
 
+// Returns the aws.Signer associated with the aws-*-key flags.
 func DefaultSigner()(signer *aws.Signer, err os.Error){
   if accessKey == nil || secretKey == nil {
     flag.Parse()
