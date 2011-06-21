@@ -5,9 +5,9 @@ GOFILES=\
 	service.go\
 	consts.go\
 	response.go\
-#	attribute.go\
+	domain.go\
+	attribute.go\
 #	handler.go\
-#	query.go\
 #	response.go\
 
 DEPS=../

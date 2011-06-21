@@ -10,3 +10,16 @@ type listdomainsresponse struct {
   ErrorCode string "Errors>Error>Code"
 }
 
+
+type getattributesresponse struct {
+  Attributes []Attribute "GetAttributesResult>Attribute"
+  ErrorMessage  string "Errors>Error>Message"
+  ErrorCode string "Errors>Error>Code"
+}
+
+type selectresponse struct {
+  Items []Item "SelectResult>Item"
+  ErrorMessage  string "Errors>Error>Message"
+  ErrorCode string "Errors>Error>Code"
+  NextToken string
+}
