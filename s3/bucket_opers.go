@@ -9,6 +9,8 @@ import (
   "xml"
 )
 
+
+// Represents a URL and connection to an S3 bucket.
 type Bucket struct {
   Name string
   URL  *http.URL
@@ -42,6 +44,9 @@ func (self *Bucket)key_url(key string)(*http.URL){
   }
 }
 
+
+// Will open a local file, size it, and upload it to the named key.
+// This is a convenience wrapper aroudn PutFile.
 func (self *Bucket)PutLocalFile(id *aws.Signer, key, file string)(err os.Error){
   fp, err := os.Open(file)
   if err == nil {
@@ -51,6 +56,9 @@ func (self *Bucket)PutLocalFile(id *aws.Signer, key, file string)(err os.Error){
   return
 }
 
+// Will put an open file descriptor to the named key.  Size is determined
+// by statting the fd (so a partially read file will not work).
+// TODO: ACL's & content-type/headers support
 func (self *Bucket)PutFile(id *aws.Signer, key string, fp *os.File)(err os.Error){
   var resp *http.Response
   if fp == nil {
@@ -72,6 +80,7 @@ func (self *Bucket)PutFile(id *aws.Signer, key string, fp *os.File)(err os.Error
   return
 }
 
+// Deletes the named key from the bucket.  To delete a bucket, see *Service.DeleteBucket()
 func (self *Bucket)Delete(id *aws.Signer, key string)(err os.Error){
   var resp *http.Response
   if key == "" {
@@ -91,6 +100,8 @@ func (self *Bucket)Delete(id *aws.Signer, key string)(err os.Error){
   return
 }
 
+// Opens the named key and copys it to the named io.Writer.
+// Also returns the http headers for convenience.
 func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(http.Header, err os.Error){
   var resp *http.Response
   hreq := aws.NewRequest(self.key_url(key), "GET", nil, nil)
@@ -109,6 +120,8 @@ func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(http.Header, 
   return
 }
 
+// Performs a HEAD request on the bucket and returns nil of the key appears
+// valid (returns 200).
 func (self *Bucket)Exists(id *aws.Signer, key string)(err os.Error){
   var resp *http.Response
   hreq := aws.NewRequest(self.key_url(key), "HEAD", nil, nil)
@@ -127,6 +140,8 @@ type owner struct {
   DisplayName string
 }
 
+// Walks a bucket and writes the resultign strings to the channel.
+// * There is currently NO (correct) way to abort a running walk.
 func (self *Bucket)ListKeys(id *aws.Signer,
               prefix, delim, marker string, out chan<- string)(err os.Error){
   var done bool
