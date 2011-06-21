@@ -16,15 +16,23 @@ type Service struct {
   conn *aws.Conn
 }
 
+// Initilalize a new Service object with a specific
+// S3 endpoint.  If URL is omitted, it defaults to the
+// us-east endpoint over HTTPS (https://s3.amazonaws.com/) 
 func NewService(url *http.URL)(s *Service){
   s = &Service {
     URL: url,
   }
-  if s.URL == nil { s.URL, _  = http.ParseURL(USEAST_HOST) }
+  if s.URL == nil { s.URL, _  = http.ParseURL("https://" + USEAST_HOST + "/") }
   s.conn = aws.NewConn(aws.URLDialer(s.URL, nil))
   return
 }
 
+// Returns a new *Bucket with the same connection and URL
+// data as the Service connection.  You MUST have already
+// created the bucket in order to make use of the Bucket object.
+//
+// See CreateBucket.
 func (self *Service)Bucket(name string)(*Bucket){
   return NewBucket(self.URL, name, self.conn)
 }
@@ -41,6 +49,7 @@ func (self *Service)bucket_url(bucket string)(*http.URL){
   }
 }
 
+// Deletes the named bucket from the S3 service.
 func (self *Service)DeleteBucket(id *aws.Signer, name string)(err os.Error){
   var resp *http.Response
   hreq := aws.NewRequest(self.bucket_url(name), "DELETE", nil, nil)
@@ -59,6 +68,9 @@ func (self *Service)DeleteBucket(id *aws.Signer, name string)(err os.Error){
   return
 }
 
+// Creates a new bucket
+// TODO: Will (probably) create the bucket in US-east no matter
+// what underlying endpoint you've chosen.
 func (self *Service)CreateBucket(id *aws.Signer, name string)(err os.Error){
   var resp *http.Response
   hreq := aws.NewRequest(self.bucket_url(name), "PUT", nil, nil)
