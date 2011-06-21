@@ -42,7 +42,18 @@ func Main()(err os.Error){
         return
       },
     },
-    "delete":UserCall{
+    "list":UserCall{
+      F: func()(err os.Error){
+        qs, err := s.ListQueues(signer, "")
+        if err == nil {
+          for i := range(qs) {
+            fmt.Printf("%s\n", qs[i])
+          }
+        }
+        return
+      },
+    },
+    "drop":UserCall{
       F: func()(err os.Error){
         Q, err := s.CreateQueue(signer, flag.Arg(1),  *flag_default_timeout)
         if err == nil {

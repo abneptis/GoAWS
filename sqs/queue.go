@@ -28,11 +28,12 @@ func (self *Queue)DeleteQueue(id *aws.Signer)(err os.Error){
   parms := http.Values{}
   parms.Set("Action","DeleteQueue")
 
-  req := newRequest("GET", self.URL, nil, parms)
-  err = signRequest(id, req)
+  req := aws.NewRequest(self.URL, "GET", nil, parms)
+  err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_VERSION, 15)
   if err == nil {
     resp, err = self.conn.Request(req)
     if err == nil {
+      defer resp.Body.Close()
       if resp.StatusCode != http.StatusOK {
         err = os.NewError("Unexpected response")
       }
@@ -47,11 +48,12 @@ func (self *Queue)Push(id *aws.Signer, body []byte)(err os.Error){
   parms := http.Values{}
   parms.Set("Action","SendMessage")
   parms.Set("MessageBody", string(body))
-  req := newRequest("GET", self.URL, nil, parms)
-  err = signRequest(id, req)
+  req := aws.NewRequest(self.URL, "GET", nil, parms)
+  err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_VERSION, 15)
   if err == nil {
     resp, err = self.conn.Request(req)
     if err == nil {
+      defer resp.Body.Close()
       if resp.StatusCode != http.StatusOK {
         err = os.NewError("Unexpected response")
       }
@@ -68,12 +70,12 @@ func (self *Queue)Peek(id *aws.Signer, vt int)(body []byte, msgid string, err os
   if vt >= 0 {
     parms.Set("VisibilityTimeout", strconv.Itoa(vt))
   }
-  req := newRequest("GET", self.URL, nil, parms)
-  err = signRequest(id, req)
+  req := aws.NewRequest(self.URL, "GET", nil, parms)
+  err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_VERSION, 15)
   if err == nil {
     resp, err = self.conn.Request(req)
     if err == nil { defer resp.Body.Close() }
-    if resp.StatusCode != http.StatusOK {
+    if err == nil && resp.StatusCode != http.StatusOK {
         err = os.NewError("Unexpected response")
     }
     if err == nil {
@@ -93,8 +95,8 @@ func (self *Queue)Delete(id *aws.Signer, mid string)(err os.Error){
   parms := http.Values{}
   parms.Set("Action","DeleteMessage")
   parms.Set("ReceiptHandle", mid)
-  req := newRequest("GET", self.URL, nil, parms)
-  err = signRequest(id, req)
+  req := aws.NewRequest(self.URL, "GET", nil, parms)
+  err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_VERSION, 15)
   if err == nil {
     resp, err = self.conn.Request(req)
     if err == nil { defer resp.Body.Close() }

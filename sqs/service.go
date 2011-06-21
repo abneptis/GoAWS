@@ -29,6 +29,33 @@ func NewService(url *http.URL)(*Service){
   }
 }
 
+func (self *Service)ListQueues(id *aws.Signer, prefix string)(mq []string, err os.Error){
+  var resp *http.Response
+  parms := http.Values{}
+  parms.Set("Action","ListQueues")
+  if prefix != "" {
+    parms.Set("QueueNamePrefix",prefix)
+  }
+
+  req := aws.NewRequest(self.URL, "GET", nil, parms)
+  err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_VERSION, 15)
+  resp, err = self.conn.Request(req)
+  if err == nil {
+    defer resp.Body.Close()
+    xresp := listQueuesResponse{}
+    if resp.StatusCode == http.StatusOK {
+      err = xml.Unmarshal(resp.Body, &xresp)
+    } else {
+      err = os.NewError("Unexpected response code")
+    }
+    if err == nil {
+      mq = xresp.QueueURL
+    }
+
+  }
+  return
+}
+
 // Create a queue, returning the Queue object.
 func (self *Service)CreateQueue(id *aws.Signer, name string, dvtimeout int)(mq *Queue, err os.Error){
   var resp *http.Response
@@ -37,11 +64,12 @@ func (self *Service)CreateQueue(id *aws.Signer, name string, dvtimeout int)(mq *
   parms.Set("QueueName",name)
   parms.Set("DefaultVisibilityTimeout",strconv.Itoa(dvtimeout))
 
-  req := newRequest("GET", self.URL, nil, parms)
-  err = signRequest(id, req)
+  req := aws.NewRequest(self.URL, "GET", nil, parms)
+  err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_VERSION, 15)
   if err == nil {
     resp, err = self.conn.Request(req)
     if err == nil {
+      defer resp.Body.Close()
       if resp.StatusCode == http.StatusOK {
         xmlresp := createQueueResponse{}
         err = xml.Unmarshal(resp.Body, &xmlresp)
@@ -66,13 +94,8 @@ type createQueueResponse struct {
   RequestId string "ResponseMetadata>RequestId"
 }
 
-/*
-<CreateQueueResponse xmlns="http://queue.amazonaws.com/doc/2009-02-01/">
-  <CreateQueueResult>
-   <QueueUrl>https://queue.amazonaws.com/930374178234/tQueue</QueueUrl>
-  </CreateQueueResult>
-  <ResponseMetadata>
-   <RequestId>97c6d561-1c7d-4ac7-9ebc-b7f1c87baabf</RequestId>
-  </ResponseMetadata>
-</CreateQueueResponse>
-*/
+type listQueuesResponse struct {
+  QueueURL []string "ListQueuesResult>QueueUrl"
+  RequestId string "ResponseMetadata>RequestId"
+}
+

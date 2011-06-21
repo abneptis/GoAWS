@@ -5,7 +5,7 @@ GOFILES=\
 	\
 	queue.go\
 	service.go\
-	request.go\
+	consts.go\
 
 DEPS=\
 	../\
