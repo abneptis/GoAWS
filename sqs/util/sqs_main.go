@@ -11,7 +11,6 @@ import (
   "flag"
   "fmt"
   "http"
-  "log"
   "io"
   "os"
 )
@@ -37,7 +36,6 @@ func DefaultSQSService()(id *aws.Signer, s *sqs.Service, err os.Error){
 
 
 func init(){
-  log.Printf("SQS Module init")
   AddModule("sqs", func(){
     flag.StringVar(&flag_endpoint_url, "sqs-endpoint","https://queue.amazonaws.com/", "Endpoint to use")
     flag.IntVar(&flag_default_timeout, "sqs-queue-timeout", 90, "Queue timeout (create/delete)")

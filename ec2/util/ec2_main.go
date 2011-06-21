@@ -10,7 +10,7 @@ import (
 import (
   "http"
   "os"
-  "log"
+  "fmt"
   "flag"
 )
 
@@ -36,7 +36,6 @@ func DefaultEC2Service()(id *aws.Signer, s *ec2.Service, err os.Error){
 }
 
 func init(){
-  log.Printf("EC2 Module init")
   AddModule("ec2", func(){
     flag.StringVar(&flag_endpoint_url, "ec2-endpoint", "https://ec2.amazonaws.com/", "Endpoint to use for EC2 calls")
   })
@@ -46,7 +45,7 @@ func init(){
       c := make(chan ec2.Instance)
       go func(){
         for i := range(c){
-          log.Printf("%+v\n", i)
+          fmt.Printf("%+v\n", i)
         }
       }()
       err = s.DescribeInstances(id, nil, c)

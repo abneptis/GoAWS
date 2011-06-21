@@ -12,7 +12,6 @@ import (
 import (
   "flag"
   "os"
-  "log"
   "fmt"
 )
 
@@ -38,11 +37,9 @@ func main(){
     modulenames = append(modulenames, k)
   }
   if m, ok := Modules[module]; ok {
-    log.Printf("Module == %+v",m) 
     m.FlagFunc()
     flag.Parse()
     if c, ok := m.Calls[cmd] ; ok {
-      log.Printf("Call == %+v",c) 
       err = m.Setup()
       if err == nil {
         err = c(flag.Args())
