@@ -1,0 +1,8 @@
+package aws
+
+const (
+  DEFAULT_SIGNATURE_VERSION = "2"
+  DEFAULT_SIGNATURE_METHOD  = "HmacSHA256"
+)
+
+
