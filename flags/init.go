@@ -1,5 +1,4 @@
 package flags
-
 // The flags module is primarily a convenience module for those
 // who want to request the AWS identity on the command line
 // It should be noted that this approach is not particularly secure
@@ -13,6 +12,8 @@ import (
   "flag"
   "os"
 )
+
+
 
 var accessKey *string = flag.String("aws-access-key", 
                os.Getenv("AWS_ACCESS_KEY_ID"), "AWS Access Key")
