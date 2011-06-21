@@ -7,7 +7,9 @@ DEPS=\
 	../s3/util/\
 	../sqs/util/\
 	../sdb/util/\
+	../ec2/util/\
 	../flags/\
+	./common/\
 
 CLEANFILES+=\
 
