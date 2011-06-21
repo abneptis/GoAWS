@@ -13,6 +13,9 @@ import (
   "time"
 )
 
+// A signer simply holds the access & secret access keys
+// necessary for aws, and proivides helper functions
+// to assist in generating an appropriate signature.
 type Signer struct {
   AccessKey string
   secretAccessKey []byte
@@ -22,6 +25,7 @@ func NewSigner(akid, sak string)(*Signer){
   return &Signer{akid,bytes.NewBufferString(sak).Bytes()}
 }
 
+// the core function of the Signer, generates the raw hmac of he bytes.
 func (self Signer)SignBytes(h crypto.Hash, buff []byte)(sig []byte, err os.Error){
   hh := hmac.New(func()(hash.Hash){
      return h.New()
@@ -33,6 +37,7 @@ func (self Signer)SignBytes(h crypto.Hash, buff []byte)(sig []byte, err os.Error
   return
 }
 
+// Same as SignBytes, but with strings.
 func (self Signer)SignString(h crypto.Hash, s string)(os string, err os.Error){
   ob, err := self.SignBytes(h, bytes.NewBufferString(s).Bytes())
   if err == nil {
@@ -41,6 +46,7 @@ func (self Signer)SignString(h crypto.Hash, s string)(os string, err os.Error){
   return
 }
 
+// SignBytes, but will base64 encode based on the specified encoder.
 func (self Signer)SignEncoded(h crypto.Hash, s string, e *base64.Encoding)(out []byte, err os.Error){
   ob, err := self.SignBytes(h, bytes.NewBufferString(s).Bytes())
   if err == nil { 
@@ -51,6 +57,9 @@ func (self Signer)SignEncoded(h crypto.Hash, s string, e *base64.Encoding)(out [
 }
 
 // The V2 denotes amazon signing version 2, not version 2 of this particular function...
+// V2 is used by all services but S3;
+// Note, some services vary in their exact implementation of escaping w/r/t signatures,
+// so it is recommended you use this function.
 func (self *Signer)SignRequestV2(req *http.Request, canon func(*http.Request)(string), api_ver string, exp int64)(err os.Error){
   // log.Printf("Signing request...")
 
@@ -111,11 +120,14 @@ func (self *Signer)SignRequestV1(req *http.Request, canon func(*http.Request)(st
   return
 }
 
-
+// Generates the canonical string-to-sign for (most) AWS services.
+// You shouldn't need to use this directly.
 func Canonicalize(req *http.Request)(out string){
   return strings.Join([]string{req.Method, req.Host, req.URL.Path, SortedEscape(req.Form)}, "\n")
 }
 
+// Generates the canonical string-to-sign for S3 services.
+// You shouldn't need to use this directly unless you're pre-signing URL's.
 func CanonicalizeS3(req *http.Request)(string){
   return strings.Join([]string{ req.Method, req.Header.Get("Content-Md5"), req.Header.Get("Content-Type"), req.Form.Get("Expires"), req.URL.Path, }, "\n")
 }
