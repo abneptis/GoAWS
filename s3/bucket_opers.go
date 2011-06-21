@@ -74,7 +74,10 @@ func (self *Bucket)PutFile(id *aws.Signer, key string, fp *os.File)(err os.Error
     err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
     if err == nil {
       resp, err = self.conn.Request(hreq)
-      if err == nil { err = aws.CodeToError(resp.StatusCode) }
+      if err == nil {
+        defer resp.Body.Close()
+        err = aws.CodeToError(resp.StatusCode)
+      }
     }
   }
   return
@@ -92,6 +95,7 @@ func (self *Bucket)Delete(id *aws.Signer, key string)(err os.Error){
     resp, err = self.conn.Request(hreq)
   }
   if err == nil {
+    defer resp.Body.Close()
     if resp.StatusCode != http.StatusNoContent {
       err = aws.CodeToError(resp.StatusCode)
     }
@@ -110,6 +114,7 @@ func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(hdr http.Head
     resp, err = self.conn.Request(hreq)
   }
   if err == nil {
+    defer resp.Body.Close()
     err = aws.CodeToError(resp.StatusCode)
     hdr = resp.Header
   } 
@@ -131,6 +136,7 @@ func (self *Bucket)Exists(id *aws.Signer, key string)(err os.Error){
     resp, err = self.conn.Request(hreq)
   }
   if err == nil {
+    defer resp.Body.Close()
     err = aws.CodeToError(resp.StatusCode)
   } 
   return
@@ -164,15 +170,16 @@ func (self *Bucket)ListKeys(id *aws.Signer,
     }
     if err == nil {
       err = aws.CodeToError(resp.StatusCode)
-    } 
-    if err == nil {
-      err = xml.Unmarshal(resp.Body, &result)
       if err == nil {
-        for i := range(result.Contents) {
-          out <- result.Contents[i].Key
+        err = xml.Unmarshal(resp.Body, &result)
+        if err == nil {
+          for i := range(result.Contents) {
+            out <- result.Contents[i].Key
+          }
+          done = ! result.IsTruncated
         }
-        done = ! result.IsTruncated
       }
+      resp.Body.Close() 
     }
   }
   return
@@ -196,23 +203,3 @@ type keyItem struct {
   StorageClass string
 }
 
-/* Example output (2011-06-20)
-<?xml version="1.0" encoding="UTF-8"?>
-<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
- <Name>apt.abneptis.com</Name>
- <Prefix></Prefix>
- <Marker></Marker>
- <MaxKeys>1000</MaxKeys>
- <IsTruncated>false</IsTruncated>
- <Contents>
-  <Key>debian//dists/deli/Release</Key>
-  <LastModified>2011-06-19T00:45:37.000Z</LastModified>
-  <ETag>&quot;bf185ac183a3cd3ad4c9332beb45fc70&quot;</ETag>
-  <Size>14007</Size>
-  <Owner>
-   <ID>19f48e038756359c402c774f40ea9b193668d906b8836c783823b9fd33b270ef</ID>
-   <DisplayName>amazon</DisplayName>
-  </Owner>
-  <StorageClass>STANDARD</StorageClass>
- </Contents>
-*/

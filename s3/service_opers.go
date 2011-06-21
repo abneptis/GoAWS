@@ -60,6 +60,7 @@ func (self *Service)DeleteBucket(id *aws.Signer, name string)(err os.Error){
   }
 
   if err == nil {
+    defer resp.Body.Close()
     if resp.StatusCode != http.StatusNoContent {
       err = aws.CodeToError(resp.StatusCode)
     }
@@ -80,6 +81,7 @@ func (self *Service)CreateBucket(id *aws.Signer, name string)(err os.Error){
     resp, err = self.conn.Request(hreq)
   }
   if err == nil {
+    defer resp.Body.Close()
     err = aws.CodeToError(resp.StatusCode)
   }
   return
@@ -99,6 +101,7 @@ func (self *Service)ListBuckets(id *aws.Signer)(out []string, err os.Error){
     err = aws.CodeToError(resp.StatusCode)
   }
   if err == nil {
+    defer resp.Body.Close()
     result := listAllMyBucketsResult{}
     err = xml.Unmarshal(resp.Body, &result)
     if err == nil {
