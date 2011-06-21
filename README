@@ -17,6 +17,5 @@ are intended primarily for testing and API usage examples.
   Please note, full compilation may depend on the following modules, also
 available at github:
 
-  - github.com/abneptis/GoURLTools  (com.abneptis.oss/urltools)  [minimal, will probably be completely removed in the future]
   - github.com/abneptis/GoMaptools  (com.abneptis.oss/maptools)  [deprecated, only needed for unmigrated modules]
   - github.com/abneptis/GoCryptools (com.abneptis.oss/cryptools) [deprecated, only needed for unmigrated modules]
