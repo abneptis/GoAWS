@@ -6,10 +6,6 @@ you will likely find near-zero one-one compatibility.
   - Check godoc for the new structures & shapes.
   - The tools have been aggregated into a single built tool (in progress)
 
-
-  After several revisions (read: rewrites), I finally have some AWS tools
-I'm happy with the form of.
-
   Some key functions are not yet implemented (ACL's, subresources), 
 and most of it is not yet thoroughly tested outside the direct 
 paths required for the command line tool.
