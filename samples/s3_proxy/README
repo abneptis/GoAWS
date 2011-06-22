@@ -34,12 +34,31 @@ or supports the http_proxy environment variable:
 $ http_proxy="http://localhost:8080" curl http://logs.mydomain.com/some-key
 ....
 
+Serving a partial site from S3 with a content-prefix.
+-----------------------------------------------------
+# nginx conf stub
+  location /s3/ {
+    proxy_pass  http://localhost:8080/
+  }
+
+# config.js
+{ "localhost" : { "Bucket":"static.bucket.tld", "Prefix":"/static_content/" }}
+
+(Please read the comments and notes throughout before trying this in production,
+as there are a number of places you could improve performance if you needed it,
+and transferring very large files will require a very large amount of memory
+as the example buffers the entire response from S3 into memory prior to writing
+it to the client.)
+
 Use notes
 =========
 -  Currently it strips off the port of the incoming request before mapping, so you cannot specify things like "localhost:8080".
 -  Only GET is supported
--  Requesting '/' in S3 is a ListBucket request.  We don't act to block it in this example.
+-  Requesting '/' in S3 is a ListBucket request.  
+   We don't act to block such attempts in this example.
 -  It binds to localhost:8080 by default, and can be changed on the command line.
--  You may use either the AWS_PUBLIC_KEY_ID and AWS_SECRET_KEY environment variables, or specify per-domain credentials in the config.
+-  You may use either the AWS_PUBLIC_KEY_ID and AWS_SECRET_KEY environment 
+   variables which are used for all domains that have no per-domain credentials
+   in the config ( via the "AccessKey" and "SecretKey" fields).
 
 Have fun!
