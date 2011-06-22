@@ -16,3 +16,9 @@ are intended primarily for testing and API usage examples.
 
   Please note, full compilation may depend on the following modules, also
 available at github:
+
+
+Alternatives (let me know if I miss any)
+========================================
+  goamz - https://wiki.ubuntu.com/goamz - seems to have much more complete
+ec2 support, and s3
