@@ -2,8 +2,13 @@ package s3
 
 import (
   "aws"
+)
+
+import (
+  "bytes"
   "http"
   "io"
+  "io/ioutil"
   "os"
   "path"
   "xml"
@@ -78,6 +83,42 @@ func (self *Bucket)PutFile(id *aws.Signer, key string, fp *os.File)(err os.Error
         defer resp.Body.Close()
         err = aws.CodeToError(resp.StatusCode)
       }
+    }
+  }
+  return
+}
+
+
+func (self *Bucket)PutKeyBytes(id *aws.Signer, key string, buff []byte, hdr http.Header)(err os.Error){
+  var resp *http.Response
+  hreq := aws.NewRequest(self.key_url(key), "PUT", hdr, nil)
+  hreq.ContentLength = int64(len(buff))
+  hreq.Body = ioutil.NopCloser(bytes.NewBuffer(buff))
+  err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
+  if err == nil {
+    resp, err = self.conn.Request(hreq)
+    if err == nil {
+      defer resp.Body.Close()
+      err = aws.CodeToError(resp.StatusCode)
+    }
+  }
+  return
+}
+
+// NB: Length is required as we do not buffer the reader
+// NB(2): We do NOT close your reader (hence the io.Reader), 
+// we wrap it with a NopCloser.
+func (self *Bucket)PutKeyReader(id *aws.Signer, key string, r io.Reader, l int64, hdr http.Header)(err os.Error){
+  var resp *http.Response
+  hreq := aws.NewRequest(self.key_url(key), "PUT", hdr, nil)
+  hreq.ContentLength = l
+  hreq.Body = ioutil.NopCloser(r)
+  err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
+  if err == nil {
+    resp, err = self.conn.Request(hreq)
+    if err == nil {
+      defer resp.Body.Close()
+      err = aws.CodeToError(resp.StatusCode)
     }
   }
   return
