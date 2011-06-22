@@ -3,10 +3,11 @@ package main
 import (
   . "aws/util/common" // AWS ID Flags
   . "aws/flags" // AWS ID Flags
+  "aws/ec2/ec2_util"
+  "aws/elb/elb_util"
   "aws/s3/s3_util"
   "aws/sqs/sqs_util"
   "aws/sdb/sdb_util"
-  "aws/ec2/ec2_util"
 )
 
 import (
@@ -25,7 +26,7 @@ func keys(in map[string]interface{})(out []string){
 func main(){
   flag.Parse()
   if flag.NArg() < 2 {
-    fmt.Printf("USAGE: aws [s3|sqs|sdb|ec2] subcommand ...\n")
+    fmt.Printf("USAGE: aws [ec2|elb|s3|sdb|sqs] subcommand ...\n")
     os.Exit(1)
   }
   module := flag.Arg(0)
@@ -60,6 +61,7 @@ func main(){
   os.Exit(0)
   UseFlags() // we want the side effects of import...
   ec2_util.Nil()
+  elb_util.Nil()
   s3_util.Nil()
   sdb_util.Nil()
   sqs_util.Nil()

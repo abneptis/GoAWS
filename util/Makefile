@@ -8,6 +8,7 @@ DEPS=\
 	../sqs/util/\
 	../sdb/util/\
 	../ec2/util/\
+	../elb/util/\
 	../flags/\
 	./common/\
 
