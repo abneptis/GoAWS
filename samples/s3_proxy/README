@@ -1,0 +1,45 @@
+S3_proxy
+========
+
+  An example application of the GoAWS tools, and an occasionally useful tool in your S3 toolbox.
+
+  S3_proxy simply maps specific hostnames to s3 buckets (possibly with a prefix or dedicated AWS identity),
+and returns the result directly to the user.
+
+  It is NOT a security proxy and makes very little effort to ensure the requests are proper, and
+as such should probably be used only as a starting point for a more customized S3 proxy.
+
+Potential use cases:
+====================
+
+Apt-get from S3
+---------------
+
+# apt.conf  
+deb http://localhost/debian localdist main contrib non-free
+# config.js
+{ "localhost" : { "Bucket":"myAptbucket", "Prefix":"/OS/debian/apt/" } } 
+
+Would rewrite all incoming GET's for http://localhost/...  to be proxied 
+from s3://myAptBucket/OS/debian/apt/...
+
+
+Legacy/closed source compatibility
+----------------------------------
+Add "free" s3 logic to any existing application that supports an http proxy
+or supports the http_proxy environment variable:
+
+# config.js
+{ "logs.mydomain.com" : { "Bucket":"logs.mydomain.com" }}
+$ http_proxy="http://localhost:8080" curl http://logs.mydomain.com/some-key
+....
+
+Use notes
+=========
+-  Currently it strips off the port of the incoming request before mapping, so you cannot specify things like "localhost:8080".
+-  Only GET is supported
+-  Requesting '/' in S3 is a ListBucket request.  We don't act to block it in this example.
+-  It binds to localhost:8080 by default, and can be changed on the command line.
+-  You may use either the AWS_PUBLIC_KEY_ID and AWS_SECRET_KEY environment variables, or specify per-domain credentials in the config.
+
+Have fun!

@@ -1,0 +1,3 @@
+{ "localhost" : { "Bucket":"apt.abneptis.com", "Prefix":"" },
+  "logs.mydomain.com" : { "Bucket":"logs.mydomain.com" }
+}
