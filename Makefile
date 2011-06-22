@@ -12,14 +12,14 @@ GOFILES=\
 include $(GOROOT)/src/Make.pkg
 
 module.%: %
-	make -C $*
+	gomake -C $*
 
 module_install.%: module.%
-	make -C $* install
+	gomake -C $* install
 
 module_clean.%:
-	make -C $* clean
+	gomake -C $* clean
 
-modules: module.sqs module.s3 module.sdb
-modules_install: module_install.sqs module_install.s3 module_install.sdb
-modules_clean:  module_clean.sqs module_clean.s3 module_clean.sdb
+modules: module.sqs module.s3 module.sdb module.ec2 module.elb
+modules_install: module_install.sqs module_install.s3 module_install.sdb module_install.ec2 module_install.elb
+modules_clean:  module_clean.sqs module_clean.s3 module_clean.sdb module_clean.elb module_clean.ec2
