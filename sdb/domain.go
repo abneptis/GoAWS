@@ -124,4 +124,8 @@ func (self *Domain)Select(id *aws.Signer, what, where string, consist bool, item
  return
 }
 
+// Closes the underlying connection
+func (self *Domain)Close()(err os.Error){
+  return self.conn.Close()
+}
 

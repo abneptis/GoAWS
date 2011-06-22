@@ -114,3 +114,8 @@ type message struct {
   Body []byte "ReceiveMessageResult>Message>Body"
 }
 
+// Closes the underlying connection
+func (self *Queue)Close()(err os.Error){
+  return self.conn.Close()
+}
+

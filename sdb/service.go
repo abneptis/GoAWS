@@ -129,3 +129,9 @@ func (self *Service)ListDomains(id *aws.Signer)(out []string, err os.Error){
   }
   return
 }
+
+// Closes the underlying connection
+func (self *Service)Close()(err os.Error){
+  return self.conn.Close()
+}
+

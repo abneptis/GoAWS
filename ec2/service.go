@@ -43,6 +43,11 @@ func (self *Service)DescribeInstances(id *aws.Signer, filter http.Values, ic cha
     os.Stdout.Write(ob)
   }
 
-
   return
 }
+
+// Closes the underlying connection
+func (self *Service)Close()(err os.Error){
+  return self.conn.Close()
+}
+

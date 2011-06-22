@@ -99,3 +99,8 @@ type listQueuesResponse struct {
   RequestId string "ResponseMetadata>RequestId"
 }
 
+// Closes the underlying connection
+func (self *Service)Close()(err os.Error){
+  return self.conn.Close()
+}
+

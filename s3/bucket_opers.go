@@ -266,3 +266,8 @@ type keyItem struct {
   StorageClass string
 }
 
+// Closes the underlying connection
+func (self *Bucket)Close()(err os.Error){
+  return self.conn.Close()
+}
+

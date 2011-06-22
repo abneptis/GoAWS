@@ -33,6 +33,15 @@ func (self *Conn)dial()(err os.Error){
   return
 }
 
+
+// Closes the underlying connection
+//
+// NB: if you re-use the connection after
+// this, it will be redialed.
+func (self *Conn)Close()(err os.Error){
+  self.c = nil
+  return self.uc.Close()
+}
 // Write a request and read the response;
 // This function will also fix-up req.Form for 'GET's
 func (self *Conn)Request(req *http.Request)(resp *http.Response, err os.Error){

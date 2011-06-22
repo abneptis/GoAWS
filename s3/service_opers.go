@@ -117,3 +117,8 @@ type listAllMyBucketsResult struct {
   Owner          owner
   Buckets        []string "Buckets>Bucket>Name"
 }
+
+// Closes the underlying connection
+func (self *Service)Close()(err os.Error){
+  return self.conn.Close()
+}

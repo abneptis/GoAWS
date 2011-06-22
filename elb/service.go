@@ -108,3 +108,9 @@ func (self *Service)DeleteLoadBalancer(id *aws.Signer, name string)(err os.Error
   }
   return
 }
+
+// Closes the underlying connection
+func (self *Service)Close()(err os.Error){
+  return self.conn.Close()
+}
+
