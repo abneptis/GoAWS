@@ -1,11 +1,10 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=com.abneptis.oss/aws/elb
+TARG=aws/elb
 GOFILES=\
 	consts.go\
-	endpoints.go\
-	handler.go\
-	query.go\
+	response.go\
+	service.go\
 
 DEPS=../
 
