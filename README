@@ -16,6 +16,3 @@ are intended primarily for testing and API usage examples.
 
   Please note, full compilation may depend on the following modules, also
 available at github:
-
-  - github.com/abneptis/GoMaptools  (com.abneptis.oss/maptools)  [deprecated, only needed for unmigrated modules]
-  - github.com/abneptis/GoCryptools (com.abneptis.oss/cryptools) [deprecated, only needed for unmigrated modules]
