@@ -9,6 +9,7 @@ import (
   "http"
   "io"
   "io/ioutil"
+  "net"
   "os"
   "path"
   "xml"
@@ -22,16 +23,32 @@ type Bucket struct {
   conn *aws.Conn
 }
 
-
+// NewBucket creates a new *Bucket object from an endpoint URL.
+//
 // URL is the _endpoint_ url (nil will default to https://s3.amazonaws.com/)
 // Name should be the bucket name; If you pass this as an empty string, you will regret it.
 // conn is OPTIONAL, but allows you to re-use another aws.Conn if you'd like.
+//
+// If you omit conn, the dialer used will be based off the VHost of your bucket (if possible),
+// to ensure best performance (e.g., endpoint associated w/ your bucket, and any
+// regional lb's)
 func NewBucket(u *http.URL, Name string, conn *aws.Conn)(b *Bucket){
   if u == nil {
     u = &http.URL{Scheme:"https", Host: USEAST_HOST, Path: "/"}
   }
   if conn == nil {
-    conn = aws.NewConn(aws.URLDialer(u, nil))
+    vname := VhostName(Name, u)
+    addrs, err := net.LookupHost(vname)
+    if err == nil && len(addrs) > 0 {
+      dial_url := &http.URL {
+        Scheme: u.Scheme,
+        Host: vname,
+        Path: u.Path,
+      }
+      conn = aws.NewConn(aws.URLDialer(dial_url, nil))
+    } else {
+      conn = aws.NewConn(aws.URLDialer(u, nil))
+    }
   }
   b = &Bucket {
     URL: u,
@@ -39,6 +56,11 @@ func NewBucket(u *http.URL, Name string, conn *aws.Conn)(b *Bucket){
     conn: conn,
   }
   return
+}
+
+// Returns the vhost name of the bucket (bucket.s3.amazonaws.com)
+func VhostName(b string, ep *http.URL)(string){
+  return b + "." + ep.Host
 }
 
 func (self *Bucket)key_url(key string)(*http.URL){

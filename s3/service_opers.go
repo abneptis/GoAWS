@@ -28,13 +28,15 @@ func NewService(url *http.URL)(s *Service){
   return
 }
 
-// Returns a new *Bucket with the same connection and URL
-// data as the Service connection.  You MUST have already
-// created the bucket in order to make use of the Bucket object.
+// Returns a new *Bucket with the same URL data as the Service connection.  
+// You MUST have already created the bucket in order to make use of the 
+// Bucket object.
 //
-// See CreateBucket.
+// See CreateBucket to create a new bucket.
 func (self *Service)Bucket(name string)(*Bucket){
-  return NewBucket(self.URL, name, self.conn)
+  // We deliberately do NOT re-use our conn here, in order to take advantage
+  // of vhosted bucket DNS perks.
+  return NewBucket(self.URL, name, nil)
 }
 
 func s3Path(bucket, key string)(string){
