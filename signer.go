@@ -26,7 +26,7 @@ func NewSigner(akid, sak string)(*Signer){
 }
 
 // the core function of the Signer, generates the raw hmac of he bytes.
-func (self Signer)SignBytes(h crypto.Hash, buff []byte)(sig []byte, err os.Error){
+func (self *Signer)SignBytes(h crypto.Hash, buff []byte)(sig []byte, err os.Error){
   hh := hmac.New(func()(hash.Hash){
      return h.New()
   }, self.secretAccessKey)
@@ -38,7 +38,7 @@ func (self Signer)SignBytes(h crypto.Hash, buff []byte)(sig []byte, err os.Error
 }
 
 // Same as SignBytes, but with strings.
-func (self Signer)SignString(h crypto.Hash, s string)(os string, err os.Error){
+func (self *Signer)SignString(h crypto.Hash, s string)(os string, err os.Error){
   ob, err := self.SignBytes(h, bytes.NewBufferString(s).Bytes())
   if err == nil {
     os = string(ob)
