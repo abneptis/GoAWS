@@ -102,12 +102,12 @@ func init(){
         return
   }
   Modules["s3"].Calls["create"] = func(args []string)(err os.Error){
-        if len(args) != 1 { return os.NewError("Usage: drop BUCKET") }
+        if len(args) != 1 { return os.NewError("Usage: create BUCKET") }
         err = service.CreateBucket(signer, args[0])
         return
   }
   Modules["s3"].Calls["rm"] = func(args []string)(err os.Error){
-        if len(args) < 2 { return os.NewError("Usage: delete BUCKET KEY [KEY2...]") }
+        if len(args) < 2 { return os.NewError("Usage: rm BUCKET KEY [KEY2...]") }
         bucket := args[0]
         args = args[1:]
         for i := range(args){
