@@ -60,6 +60,8 @@ func (self Signer)SignEncoded(h crypto.Hash, s string, e *base64.Encoding)(out [
 // V2 is used by all services but S3;
 // Note, some services vary in their exact implementation of escaping w/r/t signatures,
 // so it is recommended you use this function.
+//
+// Final note: if exp is set to 0, a Timestamp will be used, otherwise an expiration.
 func (self *Signer)SignRequestV2(req *http.Request, canon func(*http.Request)(string), api_ver string, exp int64)(err os.Error){
   // log.Printf("Signing request...")
 
@@ -73,7 +75,11 @@ func (self *Signer)SignRequestV2(req *http.Request, canon func(*http.Request)(st
   req.Form.Set("AWSAccessKeyId",self.AccessKey)
   req.Form.Del("Signature")
   if req.Form.Get("Timestamp") == "" && req.Form.Get("Expires") == "" {
-    req.Form.Set("Expires",strconv.Itoa64(time.Seconds() + exp))
+    if exp > 0 {
+      req.Form.Set("Expires",strconv.Itoa64(time.Seconds() + exp))
+    } else {
+      req.Form.Set("Expires",time.UTC().Format(ISO8601TimestampFormat))
+    }
   }
 
   var sig []byte 
