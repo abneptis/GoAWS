@@ -115,7 +115,8 @@ func (self *Signer)SignRequestV1(req *http.Request, canon func(*http.Request)(st
 
   if err == nil {
     req.Form.Set("Signature", string(sig))
-    if req.Method == "GET" || req.Method == "PUT" || req.Method == "DELETE" {
+    // Are there any other methods (used) that have custom form handling?
+    if req.Method != "POST" { 
       if req.URL.RawQuery != "" {
         req.URL.RawQuery += "&"
       }
