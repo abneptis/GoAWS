@@ -180,11 +180,10 @@ func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(hdr http.Head
     defer resp.Body.Close()
     err = aws.CodeToError(resp.StatusCode)
     hdr = resp.Header
-  } 
-
-  if err == nil && resp != nil {
-    _, err2 := io.Copyn(w, resp.Body, resp.ContentLength)
-    if err == nil { err = err2 }
+    if err == nil { 
+      _, err2 := io.Copy(w, resp.Body)
+      if err == nil { err = err2 }
+    }
   }
   return
 }
