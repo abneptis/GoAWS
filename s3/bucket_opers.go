@@ -134,7 +134,7 @@ func (self *Bucket)PutKeyReader(id *aws.Signer, key string, r io.Reader, l int64
   var resp *http.Response
   hreq := aws.NewRequest(self.key_url(key), "PUT", hdr, nil)
   hreq.ContentLength = l
-  hreq.Body = ioutil.NopCloser(r)
+  hreq.Body = ioutil.NopCloser(io.LimitReader(r,l))
   err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
   if err == nil {
     resp, err = self.conn.Request(hreq)

@@ -42,6 +42,7 @@ func (self *Conn)Close()(err os.Error){
   self.c = nil
   return self.uc.Close()
 }
+
 // Write a request and read the response;
 // This function will also fix-up req.Form for 'GET's
 func (self *Conn)Request(req *http.Request)(resp *http.Response, err os.Error){
@@ -63,7 +64,7 @@ func (self *Conn)Request(req *http.Request)(resp *http.Response, err os.Error){
     if err == http.ErrPersistEOF {
       err = nil
     }
-    self.c.Close()
+    self.Close()
   }
   return
 }
