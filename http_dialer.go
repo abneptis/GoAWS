@@ -54,13 +54,16 @@ func (self *Conn)Request(req *http.Request)(resp *http.Response, err os.Error){
       req.URL.RawQuery += req.Form.Encode()
       req.Form = nil
     }
-    // ob, _ := http.DumpRequest(req, true)
-    // os.Stdout.Write(ob)
-
     err = self.c.Write(req)
     if err == nil {
       resp, err = self.c.Read(req)
     }
+  }
+  if err != nil {
+    if err == http.ErrPersistEOF {
+      err = nil
+    }
+    self.c.Close()
   }
   return
 }
