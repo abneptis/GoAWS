@@ -1,15 +1,14 @@
 package main
 
 import (
-  "bytes"
   . "log"
   "flag"
   "http"
-  "io"
   "net"
   "path"
   "json"
   "os"
+  "strconv"
 )
 
 type Service struct {
@@ -30,23 +29,31 @@ func (self Service)ServeHTTP(rw http.ResponseWriter, req *http.Request){
     return
   }
   if domain, ok := self.conf[host] ; ok {
-    buff := bytes.NewBuffer(nil)
     Printf("%s %s %s", req.RemoteAddr, host, req.URL.Path)
-    // We could actually get this to be a bit faster if we simply passed in the http.ResponseWriter,
-    // but since we want to pass-through headers (content-type, etc) in this example,
-    // we have to buffer it off.
-    s3_headers, err := domain.Bucket.GetKey(domain.Identity, path.Join(domain.Prefix, req.URL.Path), buff)
-
-    if err == nil {
-       reqhdrs := rw.Header()
-       for k, v := range(s3_headers){
-         reqhdrs[k] = v
-       }
-      n, err := io.Copy(rw, buff)
-      Printf("%s %s %s %d %v", req.RemoteAddr, host, req.URL.Path, n, err)
-    } else {
-      http.Error(rw, err.String(), http.StatusInternalServerError)
+    key_path := path.Join(domain.Prefix, req.URL.Path)
+    resp, err := domain.Bucket.HeadKey(domain.Identity, key_path) 
+    if err != nil {
+      resp, err = domain.Bucket.HeadKey(domain.Identity, key_path) 
     }
+    // Error or no, we copy in the headers if we got a valid response 
+    if resp != nil {
+      for k,v := range(resp.Header) {
+        rw.Header()[k] = v
+      }
+      // We're only copying the body in for 200's.
+      if resp.ContentLength > 0 && err == nil {
+        rw.Header().Set("Content-Length", strconv.Itoa64(resp.ContentLength))
+      }
+    }
+    outcode := http.StatusInternalServerError
+    if resp != nil {
+      outcode = resp.StatusCode
+    }
+    rw.WriteHeader(outcode)
+    if err == nil { 
+      _, err = domain.Bucket.GetKey(domain.Identity, key_path, rw)
+    }
+    Printf("%d: %s %s %s %d %v", outcode, req.RemoteAddr, host, req.URL.Path, resp.ContentLength, err)
     return
   } else {
     Printf("%s %s %s - Host Unknown", req.RemoteAddr, host, req.URL.Path)

@@ -142,6 +142,10 @@ func (self *Bucket)PutKeyReader(id *aws.Signer, key string, r io.Reader, l int64
       defer resp.Body.Close()
       err = aws.CodeToError(resp.StatusCode)
     }
+    if err == aws.ErrorUnexpectedResponse {
+      ob, _ := http.DumpResponse(resp, true)
+      os.Stdout.Write(ob)
+    }
   }
   return
 }
@@ -191,14 +195,20 @@ func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(hdr http.Head
 // Performs a HEAD request on the bucket and returns nil of the key appears
 // valid (returns 200).
 func (self *Bucket)Exists(id *aws.Signer, key string)(err os.Error){
-  var resp *http.Response
+  _, err = self.HeadKey(id, key)
+  return
+}
+
+// Performs a HEAD request on the bucket and returns the response object.
+// The body is CLOSED, and it is an error to try and read from it.
+func (self *Bucket)HeadKey(id *aws.Signer, key string)(resp *http.Response, err os.Error){
   hreq := aws.NewRequest(self.key_url(key), "HEAD", nil, nil)
   err   = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
   if err == nil {
     resp, err = self.conn.Request(hreq)
   }
   if err == nil {
-    defer resp.Body.Close()
+    resp.Body.Close()
     err = aws.CodeToError(resp.StatusCode)
   } 
   return
