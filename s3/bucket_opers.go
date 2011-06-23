@@ -167,8 +167,8 @@ func (self *Bucket)Delete(id *aws.Signer, key string)(err os.Error){
   return
 }
 
-// Opens the named key and copys it to the named io.Writer.
-// Also returns the http headers for convenience.
+// Opens the named key and copys it to the named io.Writer IFF the response.Status is 200.
+// Also returns the http headers for convenience (regardless of status code, as long as a  resp is generated).
 func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(hdr http.Header, err os.Error){
   var resp *http.Response
   hreq := aws.NewRequest(self.key_url(key), "GET", nil, nil)
@@ -182,8 +182,8 @@ func (self *Bucket)GetKey(id *aws.Signer, key string, w io.Writer)(hdr http.Head
     hdr = resp.Header
   } 
 
-  if resp != nil {
-    _, err2 := io.Copy(w, resp.Body)
+  if err == nil && resp != nil {
+    _, err2 := io.Copyn(w, resp.Body, resp.ContentLength)
     if err == nil { err = err2 }
   }
   return
@@ -210,7 +210,7 @@ type owner struct {
   DisplayName string
 }
 
-// Walks a bucket and writes the resultign strings to the channel.
+// Walks a bucket and writes the resulting strings to the channel.
 // * There is currently NO (correct) way to abort a running walk.
 func (self *Bucket)ListKeys(id *aws.Signer,
               prefix, delim, marker string, out chan<- string)(err os.Error){
@@ -245,6 +245,7 @@ func (self *Bucket)ListKeys(id *aws.Signer,
       resp.Body.Close() 
     }
   }
+  close(out)
   return
 }
 
