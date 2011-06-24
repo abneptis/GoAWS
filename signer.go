@@ -9,8 +9,6 @@ import (
 	"http"
 	"os"
 	"strings"
-	"strconv"
-	"time"
 )
 
 // A signer simply holds the access & secret access keys
@@ -82,12 +80,10 @@ func (self *Signer) SignRequestV2(req *http.Request, canon func(*http.Request) s
 	req.Form.Del("Signature")
 	req.Form.Del("Timestamp")
 	req.Form.Del("Expires")
-	if req.Form.Get("Timestamp") == "" && req.Form.Get("Expires") == "" {
-		if exp > 0 {
-			req.Form.Set("Expires", strconv.Itoa64(time.Seconds()+exp))
-		} else {
-			req.Form.Set("Expires", time.UTC().Format(ISO8601TimestampFormat))
-		}
+	if exp > 0 {
+      Expires(req, nil, exp)
+	} else {
+      Timestamp(req, nil)
 	}
 
 	var sig []byte
@@ -121,8 +117,7 @@ func (self *Signer) SignRequestV1(req *http.Request, canon func(*http.Request) s
 
 	req.Form.Set("AWSAccessKeyId", self.AccessKey)
 	req.Form.Del("Signature")
-	req.Form.Set("Expires", strconv.Itoa64(time.Seconds()+exp))
-
+  Expires(req, nil, exp)
 	var sig []byte
 	sig, err = self.SignEncoded(crypto.SHA1, canon(req), base64.StdEncoding)
 
