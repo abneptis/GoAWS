@@ -14,8 +14,20 @@ paths required for the command line tool.
 fully capable of basic administration of ELB, S3, SQS, and SimpleDB resources, but 
 are intended primarily for testing and API usage examples.
 
-  Please note, full compilation may depend on the following modules, also
-available at github:
+  This package should build/goinstall on its own, but to make use of the sub-modules,
+you will need to run 'make modules modules_install'.  (If anyone can submit a patch
+to allow goinstall to do the entire project, it will be gladly accepted!)
+
+Bugs/Notes
+==========
+ - All the core modules maintain a persistant connection to the service endpoint
+ - S3 doesn't currently follow redirects for puts
+ - NO api's automatically retry, it is left to the caller to retry if so desired.
+ - Errors are not consistant across all modules/calls, work is ongoing to fix this.
+ - There are a number of issues related to Go's XML parsing that have made
+full implementation potentially buggy.
+ - Most basic commands/operations are available, but we do not currently support
+setting ACL's or IAM (directly). 
 
 
 Alternatives (let me know if I miss any)
