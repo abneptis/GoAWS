@@ -74,6 +74,8 @@ func (self *Signer)SignRequestV2(req *http.Request, canon func(*http.Request)(st
   req.Form.Set("Version", api_ver)
   req.Form.Set("AWSAccessKeyId",self.AccessKey)
   req.Form.Del("Signature")
+  req.Form.Del("Timestamp")
+  req.Form.Del("Expires")
   if req.Form.Get("Timestamp") == "" && req.Form.Get("Expires") == "" {
     if exp > 0 {
       req.Form.Set("Expires",strconv.Itoa64(time.Seconds() + exp))
@@ -91,7 +93,7 @@ func (self *Signer)SignRequestV2(req *http.Request, canon func(*http.Request)(st
 
   if err == nil {
     req.Form.Set("Signature", string(sig))
-    if req.Method == "GET" {
+    if req.Method != "POST" {
       if req.URL.RawQuery != "" {
         req.URL.RawQuery += "&"
       }
