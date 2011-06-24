@@ -39,9 +39,14 @@ func (self *Conn)dial()(err os.Error){
 // NB: if you re-use the connection after
 // this, it will be redialed.
 func (self *Conn)Close()(err os.Error){
-  self.c.Close()
-  self.c = nil
-  return self.uc.Close()
+  if self.c != nil {
+    self.c.Close()
+    self.c = nil
+  }
+  if self.uc != nil {
+    err = self.uc.Close()
+  }
+  return
 }
 
 // Write a request and read the response;
