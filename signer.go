@@ -81,9 +81,9 @@ func (self *Signer) SignRequestV2(req *http.Request, canon func(*http.Request) s
 	req.Form.Del("Timestamp")
 	req.Form.Del("Expires")
 	if exp > 0 {
-      Expires(req, nil, exp)
+		Expires(req, nil, exp)
 	} else {
-      Timestamp(req, nil)
+		Timestamp(req, nil)
 	}
 
 	var sig []byte
@@ -117,7 +117,7 @@ func (self *Signer) SignRequestV1(req *http.Request, canon func(*http.Request) s
 
 	req.Form.Set("AWSAccessKeyId", self.AccessKey)
 	req.Form.Del("Signature")
-  Expires(req, nil, exp)
+	Expires(req, nil, exp)
 	var sig []byte
 	sig, err = self.SignEncoded(crypto.SHA1, canon(req), base64.StdEncoding)
 

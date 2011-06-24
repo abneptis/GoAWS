@@ -2,7 +2,7 @@ package aws
 
 import (
 	"http"
-  "strconv"
+	"strconv"
 	"time"
 )
 /* 
@@ -29,7 +29,7 @@ func Timestamp(req *http.Request, t func() *time.Time) {
 // You may supply a custom time() function, else time.Seconds() is used.
 func Expires(req *http.Request, t func() *time.Time, from_now int64) {
 	if t == nil {
-		req.Form.Set("Expires", strconv.Itoa64(time.Seconds() + from_now))
+		req.Form.Set("Expires", strconv.Itoa64(time.Seconds()+from_now))
 	} else {
 		req.Form.Set("Expires", strconv.Itoa64(t().Seconds()+from_now))
 	}
