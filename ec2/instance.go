@@ -2,7 +2,7 @@ package ec2
 
 
 import (
-  "xml"
+	"xml"
 )
 /*
   The XML package doesn't do deeply-nested types with reflection well,
@@ -11,39 +11,39 @@ import (
 */
 
 type describeInstancesResponse struct {
-  RequestId string "requestId"
-  Reservations []ReservationSet "reservationSet>item"
+	RequestId    string           "requestId"
+	Reservations []ReservationSet "reservationSet>item"
 }
 
 type GroupSet struct {
-  GroupId string "groupId"
-  GroupName string "groupName"
+	GroupId   string "groupId"
+	GroupName string "groupName"
 }
 
 type ReservationSet struct {
-  ReservationId string
-  OwnerId string
-  Groups  []GroupSet "groupSet>item"
-  Instances []Instance "instancesSet>item"
+	ReservationId string
+	OwnerId       string
+	Groups        []GroupSet "groupSet>item"
+	Instances     []Instance "instancesSet>item"
 }
 
 
 // At the level of depth we're at, XML's 
 //  not happy with us
 type Instance struct {
-  XMLName  xml.Name
-  InstanceId string
-  ImageId    string
-  PrivateDNSName string
-  DNSName  string
-  PrivateIPAddress string 
-  IPAddress string
-  AvailabilityZone string "placement>availabilityZone"
-  MonitoringState  string "monitoring>state"
-  InstanceType string
-  RootDeviceName string
-  RootDeviceType string
-  KernelId string
+	XMLName          xml.Name
+	InstanceId       string
+	ImageId          string
+	PrivateDNSName   string
+	DNSName          string
+	PrivateIPAddress string
+	IPAddress        string
+	AvailabilityZone string "placement>availabilityZone"
+	MonitoringState  string "monitoring>state"
+	InstanceType     string
+	RootDeviceName   string
+	RootDeviceType   string
+	KernelId         string
 }
 
 /* Example EC2 Output (2011-06-21)
