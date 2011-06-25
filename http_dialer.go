@@ -102,8 +102,8 @@ func URLDialer(u *http.URL, conf *tls.Config) (f func() (c net.Conn, err os.Erro
 }
 
 // Constructs a basic http.Request based off of a fully-qualified URL
-func NewRequest(url *http.URL, method string, hdrs http.Header, params http.Values) *http.Request {
-	return &http.Request{
+func NewRequest(url *http.URL, method string, hdrs http.Header, params http.Values) (req *http.Request ){
+	req = &http.Request{
 		Method: method,
 		URL: &http.URL{
 			Path:     url.Path,
@@ -113,4 +113,7 @@ func NewRequest(url *http.URL, method string, hdrs http.Header, params http.Valu
 		Header: hdrs,
 		Form:   params,
 	}
+  if req.URL.RawQuery != "" { req.URL.RawQuery += "&" }
+  req.URL.RawQuery += params.Encode()
+  return
 }

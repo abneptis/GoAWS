@@ -9,6 +9,8 @@ import (
 	"http"
 	"os"
 	"strings"
+  "strconv"
+  "time"
 )
 
 // A signer simply holds the access & secret access keys
@@ -60,76 +62,73 @@ func (self *Signer) SignEncoded(h crypto.Hash, s string, e *base64.Encoding) (ou
 // so it is recommended you use this function.
 //
 // Final note: if exp is set to 0, a Timestamp will be used, otherwise an expiration.
-func (self *Signer) SignRequestV2(req *http.Request, canon func(*http.Request) string, api_ver string, exp int64) (err os.Error) {
+func (self *Signer) SignRequestV2(req *http.Request, canon func(*http.Request)(string, os.Error), api_ver string, exp int64) (err os.Error) {
 	// log.Printf("Signing request...")
 
-	if req.Form == nil {
-		req.Form = http.Values{}
-	}
+  qstring, err := http.ParseQuery(req.URL.RawQuery)
+  if err != nil { return }
+  qstring["SignatureVersion"] =  []string{DEFAULT_SIGNATURE_VERSION}
+  if _, ok := qstring["SignatureMethod"]; !ok || len(qstring["SignatureMethod"]) == 0 {
+	  qstring["SignatureMethod"]  =  []string{DEFAULT_SIGNATURE_METHOD}
+  }
+	qstring["Version"]  =  []string{api_ver}
 
-	// Setup some defaults
-	if req.Form.Get("SignatureVersion") == "" {
-		req.Form.Set("SignatureVersion", DEFAULT_SIGNATURE_VERSION)
-	}
-	if req.Form.Get("SignatureMethod") == "" {
-		req.Form.Set("SignatureMethod", DEFAULT_SIGNATURE_METHOD)
-	}
-
-	req.Form.Set("Version", api_ver)
-	req.Form.Set("AWSAccessKeyId", self.AccessKey)
-	req.Form.Del("Signature")
-	req.Form.Del("Timestamp")
-	req.Form.Del("Expires")
-	if exp > 0 {
-		Expires(req, nil, exp)
-	} else {
-		Timestamp(req, nil)
-	}
+  if exp > 0 {
+    qstring["Expires"] = []string{strconv.Itoa64(time.Seconds()+exp)}
+  } else {
+    qstring["Timestamp"] = []string{time.UTC().Format(ISO8601TimestampFormat)}
+  }
+  qstring["Signature"] = nil, false
+  qstring["AWSAccessKeyId"] = []string{ self.AccessKey}
 
 	var sig []byte
-	switch req.Form.Get("SignatureMethod") {
+  req.URL.RawQuery = http.Values(qstring).Encode()
+  can, err := canon(req)
+  if err != nil { return }
+  //log.Printf("String-to-sign: '%s'", can)
+
+	switch qstring["SignatureMethod"][0] {
 	case "HmacSHA256":
-		sig, err = self.SignEncoded(crypto.SHA256, canon(req), base64.StdEncoding)
+		sig, err = self.SignEncoded(crypto.SHA256, can, base64.StdEncoding)
 	case "HmacSHA1":
-		sig, err = self.SignEncoded(crypto.SHA1, canon(req), base64.StdEncoding)
+		sig, err = self.SignEncoded(crypto.SHA1, can, base64.StdEncoding)
 	default:
 		err = os.NewError("Unknown SignatureMethod:" + req.Form.Get("SignatureMethod"))
 	}
 
 	if err == nil {
-		req.Form.Set("Signature", string(sig))
-		if req.Method != "POST" {
-			if req.URL.RawQuery != "" {
-				req.URL.RawQuery += "&"
-			}
-			req.URL.RawQuery += req.Form.Encode()
-		}
+    req.URL.RawQuery += "&" + http.Values{"Signature": []string{string(sig)}}.Encode()
 	}
 
 	return
 }
 
 // Used exclusively by S3 to the best of my knowledge...
-func (self *Signer) SignRequestV1(req *http.Request, canon func(*http.Request) string, exp int64) (err os.Error) {
-	if req.Form == nil {
-		req.Form = http.Values{}
-	}
+func (self *Signer) SignRequestV1(req *http.Request, canon func(*http.Request) (string, os.Error), exp int64) (err os.Error) {
+  qstring, err := http.ParseQuery(req.URL.RawQuery)
 
-	req.Form.Set("AWSAccessKeyId", self.AccessKey)
-	req.Form.Del("Signature")
-	Expires(req, nil, exp)
+  if err != nil { return }
+
+  if exp > 0 {
+    qstring["Expires"] = []string{strconv.Itoa64(time.Seconds()+exp)}
+  } else {
+    qstring["Timestamp"] = []string{time.UTC().Format(ISO8601TimestampFormat)}
+  }
+  qstring["Signature"] = nil, false
+  qstring["AWSAccessKeyId"] = []string{ self.AccessKey}
+
+
+  req.URL.RawQuery = http.Values(qstring).Encode()
+
+
+  can, err := canon(req)
+  if err != nil { return }
+
 	var sig []byte
-	sig, err = self.SignEncoded(crypto.SHA1, canon(req), base64.StdEncoding)
+	sig, err = self.SignEncoded(crypto.SHA1, can, base64.StdEncoding)
 
 	if err == nil {
-		req.Form.Set("Signature", string(sig))
-		// Are there any other methods (used) that have custom form handling?
-		if req.Method != "POST" {
-			if req.URL.RawQuery != "" {
-				req.URL.RawQuery += "&"
-			}
-			req.URL.RawQuery += req.Form.Encode()
-		}
+    req.URL.RawQuery += "&" + http.Values{"Signature": []string{string(sig)}}.Encode()
 	}
 
 	return
@@ -137,12 +136,20 @@ func (self *Signer) SignRequestV1(req *http.Request, canon func(*http.Request) s
 
 // Generates the canonical string-to-sign for (most) AWS services.
 // You shouldn't need to use this directly.
-func Canonicalize(req *http.Request) (out string) {
-	return strings.Join([]string{req.Method, req.Host, req.URL.Path, SortedEscape(req.Form)}, "\n")
+func Canonicalize(req *http.Request) (out string, err os.Error) {
+  fv, err := http.ParseQuery(req.URL.RawQuery)
+  if err == nil { 
+	  out = strings.Join([]string{req.Method, req.Host, req.URL.Path, SortedEscape(fv)}, "\n")
+  }
+  return
 }
 
 // Generates the canonical string-to-sign for S3 services.
 // You shouldn't need to use this directly unless you're pre-signing URL's.
-func CanonicalizeS3(req *http.Request) string {
-	return strings.Join([]string{req.Method, req.Header.Get("Content-Md5"), req.Header.Get("Content-Type"), req.Form.Get("Expires"), req.URL.Path}, "\n")
+func CanonicalizeS3(req *http.Request) (out string, err os.Error ){
+  fv, err := http.ParseQuery(req.URL.RawQuery)
+  if err == nil || len(fv["Expires"]) != 1 { 
+	  out = strings.Join([]string{req.Method, req.Header.Get("Content-Md5"), req.Header.Get("Content-Type"), fv["Expires"][0], req.URL.Path}, "\n")
+  }
+  return
 }
