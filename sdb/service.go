@@ -7,7 +7,6 @@ import (
 import (
 	"http"
 	"os"
-	"time"
 	"xml"
 )
 
@@ -40,9 +39,8 @@ func (self *Service) CreateDomain(id *aws.Signer, name string) (err os.Error) {
 	parms := http.Values{}
 	parms.Set("DomainName", name)
 	parms.Set("Action", "CreateDomain")
-	parms.Set("Timestamp", time.UTC().Format(aws.SQSTimestampFormat))
 	req := aws.NewRequest(self.URL, "GET", nil, parms)
-	err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_API_VERSION, 15)
+	err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_API_VERSION, 0)
 	if err == nil {
 		resp, err = self.conn.Request(req)
 	}
@@ -59,10 +57,9 @@ func (self *Service) DestroyDomain(id *aws.Signer, name string) (err os.Error) {
 	parms := http.Values{}
 	parms.Set("DomainName", name)
 	parms.Set("Action", "DeleteDomain")
-	parms.Set("Timestamp", time.UTC().Format(aws.SQSTimestampFormat))
 	req := aws.NewRequest(self.URL, "GET", nil, parms)
 
-	err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_API_VERSION, 15)
+	err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_API_VERSION, 0)
 	if err == nil {
 		resp, err = self.conn.Request(req)
 	}
@@ -83,7 +80,6 @@ func (self *Service) ListDomains(id *aws.Signer) (out []string, err os.Error) {
 	parms := http.Values{}
 	parms.Set("Action", "ListDomains")
 	parms.Set("MaxNumberOfDomains", "100")
-	parms.Set("Timestamp", time.UTC().Format(aws.SQSTimestampFormat))
 	var done bool
 	nextToken := ""
 	for err == nil && !done {
@@ -95,7 +91,7 @@ func (self *Service) ListDomains(id *aws.Signer) (out []string, err os.Error) {
 		}
 		req := aws.NewRequest(self.URL, "GET", nil, parms)
 
-		err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_API_VERSION, 15)
+		err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_API_VERSION, 0)
 		if err == nil {
 			resp, err = self.conn.Request(req)
 		}

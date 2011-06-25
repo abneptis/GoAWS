@@ -9,7 +9,6 @@ import (
 	"http"
 	"os"
 	"xml"
-	"time"
 )
 
 type Domain struct {
@@ -34,7 +33,6 @@ func (self *Domain) DeleteAttribute(s *aws.Signer, item string, attrs, expected 
 	vl.Set("Action", "DeleteAttribute")
 	vl.Set("DomainName", self.Name)
 	vl.Set("ItemName", item)
-	vl.Set("Timestamp", time.UTC().Format(aws.SQSTimestampFormat))
 
 	req := aws.NewRequest(self.URL, "GET", nil, vl)
 	err = s.SignRequestV2(req, aws.Canonicalize, DEFAULT_API_VERSION, 0)
@@ -56,7 +54,6 @@ func (self *Domain) GetAttribute(s *aws.Signer, item string, attrs AttributeList
 	vl.Set("Action", "GetAttributes")
 	vl.Set("DomainName", self.Name)
 	vl.Set("ItemName", item)
-	vl.Set("Timestamp", time.UTC().Format(aws.SQSTimestampFormat))
 
 	if consist {
 		vl.Set("ConsistentRead", "true")
@@ -100,7 +97,6 @@ func (self *Domain) Select(id *aws.Signer, what, where string, consist bool, ite
 	done := false
 	nextToken := ""
 	for err == nil && !done {
-		vl.Set("Timestamp", time.UTC().Format(aws.SQSTimestampFormat))
 		vl.Del("NextToken")
 		if nextToken != "" {
 			vl.Set("NextToken", nextToken)
