@@ -227,14 +227,14 @@ func (self *Bucket) ListKeys(id *aws.Signer,
 prefix, delim, marker string, out chan<- string) (err os.Error) {
 	var done bool
 	var resp *http.Response
-	result := listBucketResult{}
-	result.Prefix = prefix
-	result.Marker = marker
 	var last string
 	form := http.Values{"prefix": []string{prefix},
 											"delimeter": []string{delim},
 											"marker":[]string{marker}}
 	for err == nil && !done {
+		result := listBucketResult{}
+		result.Prefix = prefix
+		result.Marker = marker
 		if last != "" {form.Set("marker", last) }
 
 		hreq := aws.NewRequest(self.key_url("/"), "GET", nil, form)
