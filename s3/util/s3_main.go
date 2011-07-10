@@ -61,7 +61,9 @@ func init() {
 			}
 		}()
 		err = service.Bucket(args[0]).ListKeys(signer, "", "", "", keys)
-		close(keys)
+		if err != nil {
+			close(keys)
+		}
 		return
 	}
 

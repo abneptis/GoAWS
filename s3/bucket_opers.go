@@ -230,11 +230,12 @@ prefix, delim, marker string, out chan<- string) (err os.Error) {
 	result := listBucketResult{}
 	result.Prefix = prefix
 	result.Marker = marker
+	var last string
+	form := http.Values{"prefix": []string{prefix},
+											"delimeter": []string{delim},
+											"marker":[]string{marker}}
 	for err == nil && !done {
-		form := http.Values{}
-		form.Set("prefix", result.Prefix)
-		form.Set("marker", result.Marker)
-		form.Set("delimeter", delim)
+		if last != "" {form.Set("marker", last) }
 
 		hreq := aws.NewRequest(self.key_url("/"), "GET", nil, form)
 		err = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
@@ -249,6 +250,9 @@ prefix, delim, marker string, out chan<- string) (err os.Error) {
 				if err == nil {
 					for i := range result.Contents {
 						out <- result.Contents[i].Key
+					}
+					if len(result.Contents) > 0 {
+						last = result.Contents[len(result.Contents) - 1].Key
 					}
 					done = !result.IsTruncated
 				}
