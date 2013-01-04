@@ -77,7 +77,7 @@ func (self *Signer) SignRequestV2(req *http.Request, canon func(*http.Request) (
 	qstring["Version"] = []string{api_ver}
 
 	if exp > 0 {
-		qstring["Expires"] = []string{strconv.FormatInt(time.Now()+exp, 10)}
+		qstring["Expires"] = []string{strconv.FormatInt(time.Now().Unix()+exp, 10)}
 	} else {
 		qstring["Timestamp"] = []string{time.Now().UTC().Format(ISO8601TimestampFormat)}
 	}
@@ -117,7 +117,7 @@ func (self *Signer) SignRequestV1(req *http.Request, canon func(*http.Request) (
 	}
 
 	if exp > 0 {
-		qstring["Expires"] = []string{strconv.FormatInt(time.Now()+exp, 10)}
+		qstring["Expires"] = []string{strconv.FormatInt(time.Now().Unix()+exp, 10)}
 	} else {
 		qstring["Timestamp"] = []string{time.Now().UTC().Format(ISO8601TimestampFormat)}
 	}
