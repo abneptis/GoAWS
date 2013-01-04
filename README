@@ -14,9 +14,10 @@ paths required for the command line tool.
 fully capable of basic administration of ELB, S3, SQS, and SimpleDB resources, but 
 are intended primarily for testing and API usage examples.
 
-  This package should build/goinstall on its own, but to make use of the sub-modules,
-you will need to run 'make modules modules_install'.  (If anyone can submit a patch
-to allow goinstall to do the entire project, it will be gladly accepted!)
+Installation
+============
+
+go get github.com/abneptis/GoAWS
 
 Bugs/Notes
 ==========
