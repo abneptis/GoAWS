@@ -1,10 +1,10 @@
 package s3_util
 
 import (
-	"aws"
-	. "aws/flags"
-	"aws/s3"
-	. "aws/util/common"
+	s3 ".."
+	aws "../.."
+	. "../../flags"
+	. "../../util/common"
 	"errors"
 	"net/url"
 )

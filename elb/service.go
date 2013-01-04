@@ -1,7 +1,7 @@
 package elb
 
 import (
-	"aws"
+	aws ".."
 	"errors"
 	"net/url"
 )
@@ -82,7 +82,7 @@ func (self *Service) DescribeLoadBalancers(id *aws.Signer) (lbs []LoadBalancerDe
 	if err == nil {
 		qr := LoadBalancerQueryResult{}
 		defer resp.Body.Close()
-		err = xml.Unmarshal(resp.Body, &qr)
+		err = xml.NewDecoder(resp.Body).Decode(&qr)
 		if err == nil {
 			lbs = qr.LoadBalancerDescription
 		}
@@ -111,7 +111,7 @@ func (self *Service) DeleteLoadBalancer(id *aws.Signer, name string) (err error)
 		err = aws.CodeToError(resp.StatusCode)
 	}
 	qr := LoadBalancerQueryResult{}
-	err = xml.Unmarshal(resp.Body, &qr)
+	err = xml.NewDecoder(resp.Body).Decode(&qr)
 	if err == nil {
 		if qr.ErrorCode != "" {
 			err = errors.New(qr.ErrorCode)

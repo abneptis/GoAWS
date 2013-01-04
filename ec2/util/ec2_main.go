@@ -1,10 +1,10 @@
 package ec2_util
 
 import (
-	"aws"
-	"aws/ec2"
-	. "aws/flags"
-	. "aws/util/common"
+	ec2 ".."
+	aws "../.."
+	. "../../flags"
+	. "../../util/common"
 	"net/url"
 )
 

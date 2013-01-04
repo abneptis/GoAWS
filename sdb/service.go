@@ -1,7 +1,7 @@
 package sdb
 
 import (
-	"aws"
+	aws ".."
 	"errors"
 	"net/url"
 )
@@ -110,7 +110,7 @@ func (self *Service) ListDomains(id *aws.Signer) (out []string, err error) {
 				os.Stdout.Write(ob)
 			}
 			if err == nil {
-				err = xml.Unmarshal(resp.Body, &xmlresp)
+				err = xml.NewDecoder(resp.Body).Decode(&xmlresp)
 				if err == nil {
 					if xmlresp.ErrorCode != "" {
 						err = errors.New(xmlresp.ErrorCode)

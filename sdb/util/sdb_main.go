@@ -1,10 +1,10 @@
 package sdb_util
 
 import (
-	"aws"
-	. "aws/flags"
-	"aws/sdb"
-	. "aws/util/common"
+	sdb ".."
+	aws "../.."
+	. "../../flags"
+	. "../../util/common"
 	"errors"
 	"net/url"
 )

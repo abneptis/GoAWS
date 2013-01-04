@@ -1,7 +1,7 @@
 package sqs
 
 import (
-	"aws"
+	aws ".."
 	"errors"
 	"net/url"
 )
@@ -45,7 +45,7 @@ func (self *Service) ListQueues(id *aws.Signer, prefix string) (mq []string, err
 		defer resp.Body.Close()
 		xresp := listQueuesResponse{}
 		if resp.StatusCode == http.StatusOK {
-			err = xml.Unmarshal(resp.Body, &xresp)
+			err = xml.NewDecoder(resp.Body).Decode(&xresp)
 		} else {
 			err = errors.New("Unexpected response code")
 		}
@@ -73,7 +73,7 @@ func (self *Service) CreateQueue(id *aws.Signer, name string, dvtimeout int) (mq
 			defer resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
 				xmlresp := createQueueResponse{}
-				err = xml.Unmarshal(resp.Body, &xmlresp)
+				err = xml.NewDecoder(resp.Body).Decode(&xmlresp)
 				if err == nil {
 					var qrl *url.URL
 					qrl, err = url.Parse(xmlresp.QueueURL)

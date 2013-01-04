@@ -6,7 +6,7 @@ package flags
 // against a malicious root, but very little is.
 
 import (
-	"aws"
+	aws ".."
 	"errors"
 )
 

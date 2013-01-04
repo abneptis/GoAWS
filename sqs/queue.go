@@ -1,7 +1,7 @@
 package sqs
 
 import (
-	"aws"
+	aws ".."
 	"errors"
 	"net/url"
 )
@@ -83,7 +83,7 @@ func (self *Queue) Peek(id *aws.Signer, vt int) (body []byte, msgid string, err 
 		}
 		if err == nil {
 			msg := message{}
-			err = xml.Unmarshal(resp.Body, &msg)
+			err = xml.NewDecoder(resp.Body).Decode(&msg)
 			if err == nil {
 				body, msgid = msg.Body, msg.ReceiptHandle
 			}

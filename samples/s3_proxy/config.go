@@ -1,9 +1,9 @@
 package main
 
 import (
-	"aws"
-	. "aws/flags"
-	"aws/s3"
+	aws "../.."
+	. "../../flags"
+	"../../s3"
 	"errors"
 	"net/url"
 )

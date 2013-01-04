@@ -1,10 +1,10 @@
 package elb_util
 
 import (
-	"aws"
-	"aws/elb"
-	. "aws/flags"
-	. "aws/util/common"
+	elb ".."
+	aws "../.."
+	. "../../flags"
+	. "../../util/common"
 	"errors"
 	"net/url"
 )

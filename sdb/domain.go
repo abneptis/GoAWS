@@ -1,7 +1,7 @@
 package sdb
 
 import (
-	"aws"
+	aws ".."
 	"net/url"
 )
 
@@ -73,7 +73,7 @@ func (self *Domain) GetAttribute(s *aws.Signer, item string, attrs AttributeList
 		var response getattributesresponse
 		ob, _ := httputil.DumpResponse(resp, true)
 		os.Stdout.Write(ob)
-		err = xml.Unmarshal(resp.Body, &response)
+		err = xml.NewDecoder(resp.Body).Decode(&response)
 		if err == nil {
 			a = response.Attributes
 		}
@@ -111,7 +111,7 @@ func (self *Domain) Select(id *aws.Signer, what, where string, consist bool, ite
 			ob, _ := httputil.DumpResponse(resp, true)
 			os.Stdout.Write(ob)
 			xresp := selectresponse{}
-			err = xml.Unmarshal(resp.Body, &xresp)
+			err = xml.NewDecoder(resp.Body).Decode(&xresp)
 			if err == nil {
 				fmt.Printf("XML == %+v", xresp)
 				for i := range xresp.Items {

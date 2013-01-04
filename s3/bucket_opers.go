@@ -1,7 +1,7 @@
 package s3
 
 import (
-	"aws"
+	aws ".."
 	"errors"
 	"net/url"
 )
@@ -248,7 +248,7 @@ func (self *Bucket) ListKeys(id *aws.Signer,
 		if err == nil {
 			err = aws.CodeToError(resp.StatusCode)
 			if err == nil {
-				err = xml.Unmarshal(resp.Body, &result)
+				err = xml.NewDecoder(resp.Body).Decode(&result)
 				if err == nil {
 					for i := range result.Contents {
 						out <- result.Contents[i].Key

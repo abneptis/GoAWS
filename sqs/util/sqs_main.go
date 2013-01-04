@@ -1,10 +1,10 @@
 package sqs_util
 
 import (
-	"aws"
-	. "aws/flags"
-	"aws/sqs"
-	. "aws/util/common"
+	aws "../.."
+	. "../../flags"
+	"../../sqs"
+	. "../../util/common"
 	"errors"
 	"net/url"
 )

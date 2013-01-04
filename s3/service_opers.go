@@ -1,7 +1,7 @@
 package s3
 
 import (
-	"aws"
+	aws ".."
 	"net/url"
 )
 
@@ -106,7 +106,7 @@ func (self *Service) ListBuckets(id *aws.Signer) (out []string, err error) {
 	if err == nil {
 		defer resp.Body.Close()
 		result := listAllMyBucketsResult{}
-		err = xml.Unmarshal(resp.Body, &result)
+		err = xml.NewDecoder(resp.Body).Decode(&result)
 		if err == nil {
 			out = result.Buckets
 		}

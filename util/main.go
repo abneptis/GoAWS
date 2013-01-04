@@ -1,13 +1,13 @@
 package main
 
 import (
-	"aws/ec2/ec2_util"
-	"aws/elb/elb_util"
-	. "aws/flags" // AWS ID Flags
-	"aws/s3/s3_util"
-	"aws/sdb/sdb_util"
-	"aws/sqs/sqs_util"
-	. "aws/util/common"
+	ec2_util "../ec2/util"
+	elb_util "../elb/util"
+	. "../flags" // AWS ID Flags
+	s3_util "../s3/util"
+	sdb_util "../sdb/util"
+	sqs_util "../sqs/util"
+	. "../util/common"
 	"errors" // AWS ID Flags
 )
 

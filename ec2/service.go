@@ -1,7 +1,7 @@
 package ec2
 
 import (
-	"aws"
+	aws ".."
 	"net/url"
 )
 
@@ -38,7 +38,7 @@ func (self *Service) DescribeInstances(id *aws.Signer, filter url.Values, ic cha
 	if err == nil {
 		defer resp.Body.Close()
 		xresp := describeInstancesResponse{}
-		err := xml.Unmarshal(resp.Body, &xresp)
+		err := xml.NewDecoder(resp.Body).Decode(&xresp)
 		if err == nil {
 			log.Printf("XRESP == %+v", xresp)
 		} else {
