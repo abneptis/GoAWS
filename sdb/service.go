@@ -2,29 +2,32 @@ package sdb
 
 import (
 	"aws"
+	"errors"
+	"net/url"
 )
 
 import (
-	"http"
+	"encoding/xml"
+	"net/http"
+	"net/http/httputil"
 	"os"
-	"xml"
 )
 
 type Service struct {
-	URL  *http.URL
+	URL  *url.URL
 	conn *aws.Conn
 }
 
-func NewService(url *http.URL) *Service {
+func NewService(url_ *url.URL) *Service {
 	return &Service{
-		URL:  url,
-		conn: aws.NewConn(aws.URLDialer(url, nil)),
+		URL:  url_,
+		conn: aws.NewConn(aws.URLDialer(url_, nil)),
 	}
 }
 
 func (self *Service) Domain(name string) *Domain {
 	return &Domain{
-		URL: &http.URL{
+		URL: &url.URL{
 			Scheme: self.URL.Scheme,
 			Host:   self.URL.Host,
 			Path:   self.URL.Path,
@@ -34,9 +37,9 @@ func (self *Service) Domain(name string) *Domain {
 	}
 }
 
-func (self *Service) CreateDomain(id *aws.Signer, name string) (err os.Error) {
+func (self *Service) CreateDomain(id *aws.Signer, name string) (err error) {
 	var resp *http.Response
-	parms := http.Values{}
+	parms := url.Values{}
 	parms.Set("DomainName", name)
 	parms.Set("Action", "CreateDomain")
 	req := aws.NewRequest(self.URL, "GET", nil, parms)
@@ -46,15 +49,15 @@ func (self *Service) CreateDomain(id *aws.Signer, name string) (err os.Error) {
 	}
 	if err == nil {
 		if resp.StatusCode != http.StatusOK {
-			err = os.NewError("Unexpected response")
+			err = errors.New("Unexpected response")
 		}
 	}
 	return
 }
 
-func (self *Service) DestroyDomain(id *aws.Signer, name string) (err os.Error) {
+func (self *Service) DestroyDomain(id *aws.Signer, name string) (err error) {
 	var resp *http.Response
-	parms := http.Values{}
+	parms := url.Values{}
 	parms.Set("DomainName", name)
 	parms.Set("Action", "DeleteDomain")
 	req := aws.NewRequest(self.URL, "GET", nil, parms)
@@ -69,15 +72,15 @@ func (self *Service) DestroyDomain(id *aws.Signer, name string) (err os.Error) {
 	}
 	if err == nil {
 		if resp.StatusCode != http.StatusOK {
-			err = os.NewError("Unexpected response")
+			err = errors.New("Unexpected response")
 		}
 	}
 	return
 }
 
-func (self *Service) ListDomains(id *aws.Signer) (out []string, err os.Error) {
+func (self *Service) ListDomains(id *aws.Signer) (out []string, err error) {
 	var resp *http.Response
-	parms := http.Values{}
+	parms := url.Values{}
 	parms.Set("Action", "ListDomains")
 	parms.Set("MaxNumberOfDomains", "100")
 	var done bool
@@ -102,15 +105,15 @@ func (self *Service) ListDomains(id *aws.Signer) (out []string, err os.Error) {
 		if err == nil {
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
-				err = os.NewError("Unexpected response")
-				ob, _ := http.DumpResponse(resp, true)
+				err = errors.New("Unexpected response")
+				ob, _ := httputil.DumpResponse(resp, true)
 				os.Stdout.Write(ob)
 			}
 			if err == nil {
 				err = xml.Unmarshal(resp.Body, &xmlresp)
 				if err == nil {
 					if xmlresp.ErrorCode != "" {
-						err = os.NewError(xmlresp.ErrorCode)
+						err = errors.New(xmlresp.ErrorCode)
 					}
 					if err == nil {
 						for d := range xmlresp.Domains {
@@ -127,6 +130,6 @@ func (self *Service) ListDomains(id *aws.Signer) (out []string, err os.Error) {
 }
 
 // Closes the underlying connection
-func (self *Service) Close() (err os.Error) {
+func (self *Service) Close() (err error) {
 	return self.conn.Close()
 }

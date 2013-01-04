@@ -1,12 +1,8 @@
 package common
 
-import (
-	"os"
-)
-
 type FunctionModule struct {
 	FlagFunc func()
-	Setup    func() os.Error
+	Setup    func() error
 	Calls    map[string]UserCall
 }
 
@@ -34,8 +30,7 @@ func AddModule(mod string, ffunc func()) {
 
 // Common functionality to ease sub-modules
 
-type UserCall func([]string) os.Error
-
+type UserCall func([]string) error
 
 func init() {
 	Modules = make(map[string]*FunctionModule)

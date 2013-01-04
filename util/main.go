@@ -1,19 +1,20 @@
 package main
 
 import (
-	. "aws/util/common" // AWS ID Flags
-	. "aws/flags"       // AWS ID Flags
 	"aws/ec2/ec2_util"
 	"aws/elb/elb_util"
+	. "aws/flags" // AWS ID Flags
 	"aws/s3/s3_util"
-	"aws/sqs/sqs_util"
 	"aws/sdb/sdb_util"
+	"aws/sqs/sqs_util"
+	. "aws/util/common"
+	"errors" // AWS ID Flags
 )
 
 import (
 	"flag"
-	"os"
 	"fmt"
+	"os"
 )
 
 func keys(in map[string]interface{}) (out []string) {
@@ -32,7 +33,7 @@ func main() {
 	module := flag.Arg(0)
 	cmd := flag.Arg(1)
 	os.Args = os.Args[2:]
-	var err os.Error
+	var err error
 	modulenames := []string{}
 	for k, _ := range Modules {
 		modulenames = append(modulenames, k)
@@ -46,11 +47,11 @@ func main() {
 				err = c(flag.Args())
 			}
 		} else {
-			err = os.NewError(fmt.Sprintf("Invalid subcommand: %s, expected one of %v",
+			err = errors.New(fmt.Sprintf("Invalid subcommand: %s, expected one of %v",
 				cmd, m.Names()))
 		}
 	} else {
-		err = os.NewError(fmt.Sprintf("Invalid modulle : %s, expected one of %v",
+		err = errors.New(fmt.Sprintf("Invalid modulle : %s, expected one of %v",
 			flag.Arg(0), modulenames))
 
 	}

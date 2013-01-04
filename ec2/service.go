@@ -2,30 +2,31 @@ package ec2
 
 import (
 	"aws"
+	"net/url"
 )
 
 import (
-	"http"
+	"encoding/xml"
 	"log"
+	"net/http/httputil"
 	"os"
-	"xml"
 )
 
 type Service struct {
 	conn *aws.Conn
-	URL  *http.URL
+	URL  *url.URL
 }
 
-func NewService(url *http.URL) (s *Service) {
+func NewService(url_ *url.URL) (s *Service) {
 	return &Service{
-		URL:  url,
-		conn: aws.NewConn(aws.URLDialer(url, nil)),
+		URL:  url_,
+		conn: aws.NewConn(aws.URLDialer(url_, nil)),
 	}
 }
 
-func (self *Service) DescribeInstances(id *aws.Signer, filter http.Values, ic chan Instance) (err os.Error) {
+func (self *Service) DescribeInstances(id *aws.Signer, filter url.Values, ic chan Instance) (err error) {
 	if filter == nil {
-		filter = http.Values{}
+		filter = url.Values{}
 	}
 	filter.Set("Action", "DescribeInstances")
 	req := aws.NewRequest(self.URL, "GET", nil, filter)
@@ -43,7 +44,7 @@ func (self *Service) DescribeInstances(id *aws.Signer, filter http.Values, ic ch
 		} else {
 			log.Printf("XERR == %+v", err)
 		}
-		ob, _ := http.DumpResponse(resp, true)
+		ob, _ := httputil.DumpResponse(resp, true)
 		os.Stdout.Write(ob)
 	}
 
@@ -51,6 +52,6 @@ func (self *Service) DescribeInstances(id *aws.Signer, filter http.Values, ic ch
 }
 
 // Closes the underlying connection
-func (self *Service) Close() (err os.Error) {
+func (self *Service) Close() (err error) {
 	return self.conn.Close()
 }

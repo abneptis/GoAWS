@@ -1,16 +1,14 @@
 package main
 
 import (
-	. "aws/flags"
 	"aws"
+	. "aws/flags"
 	"aws/s3"
+	"errors"
+	"net/url"
 )
 
-import (
-	"json"
-	"http"
-	"os"
-)
+import "encoding/json"
 
 type conf map[string]*proxyConf
 
@@ -20,18 +18,18 @@ type proxyConf struct {
 	Identity *aws.Signer
 }
 
-func (self *proxyConf) UnmarshalJSON(in []byte) (err os.Error) {
+func (self *proxyConf) UnmarshalJSON(in []byte) (err error) {
 	confmap := map[string]string{}
 	err = json.Unmarshal(in, &confmap)
 	if err == nil {
 		if _, ok := confmap["Bucket"]; !ok {
-			return os.NewError("Bucket is required")
+			return errors.New("Bucket is required")
 		}
 		self.Prefix = confmap["Prefix"]
 		if self.Prefix == "" {
 			self.Prefix = "/"
 		}
-		self.Bucket = s3.NewBucket(&http.URL{
+		self.Bucket = s3.NewBucket(&url.URL{
 			Scheme: "http",
 			Host:   "s3.amazonaws.com",
 			Path:   self.Prefix,

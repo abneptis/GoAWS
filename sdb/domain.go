@@ -2,17 +2,19 @@ package sdb
 
 import (
 	"aws"
+	"net/url"
 )
 
 import (
+	"encoding/xml"
 	"fmt"
-	"http"
+	"net/http"
+	"net/http/httputil"
 	"os"
-	"xml"
 )
 
 type Domain struct {
-	URL  *http.URL
+	URL  *url.URL
 	conn *aws.Conn
 	Name string
 }
@@ -20,8 +22,7 @@ type Domain struct {
 //   if domain != "" { params["DomainName"] = domain }
 //  params["Action"] = action
 
-
-func (self *Domain) DeleteAttribute(s *aws.Signer, item string, attrs, expected AttributeList) (err os.Error) {
+func (self *Domain) DeleteAttribute(s *aws.Signer, item string, attrs, expected AttributeList) (err error) {
 	var resp *http.Response
 
 	vl := attrs.Values(ATTRIBUTE_LIST)
@@ -46,7 +47,7 @@ func (self *Domain) DeleteAttribute(s *aws.Signer, item string, attrs, expected 
 	return
 }
 
-func (self *Domain) GetAttribute(s *aws.Signer, item string, attrs AttributeList, consist bool) (a []Attribute, err os.Error) {
+func (self *Domain) GetAttribute(s *aws.Signer, item string, attrs AttributeList, consist bool) (a []Attribute, err error) {
 	var resp *http.Response
 
 	vl := attrs.Values(ATTRIBUTE_LIST)
@@ -70,7 +71,7 @@ func (self *Domain) GetAttribute(s *aws.Signer, item string, attrs AttributeList
 	}
 	if err == nil {
 		var response getattributesresponse
-		ob, _ := http.DumpResponse(resp, true)
+		ob, _ := httputil.DumpResponse(resp, true)
 		os.Stdout.Write(ob)
 		err = xml.Unmarshal(resp.Body, &response)
 		if err == nil {
@@ -80,10 +81,10 @@ func (self *Domain) GetAttribute(s *aws.Signer, item string, attrs AttributeList
 	return
 }
 
-func (self *Domain) Select(id *aws.Signer, what, where string, consist bool, items chan<- Item) (err os.Error) {
+func (self *Domain) Select(id *aws.Signer, what, where string, consist bool, items chan<- Item) (err error) {
 	var resp *http.Response
 
-	vl := http.Values{}
+	vl := url.Values{}
 
 	vl.Set("Action", "Select")
 	if where != "" {
@@ -107,7 +108,7 @@ func (self *Domain) Select(id *aws.Signer, what, where string, consist bool, ite
 			resp, err = self.conn.Request(req)
 		}
 		if err == nil {
-			ob, _ := http.DumpResponse(resp, true)
+			ob, _ := httputil.DumpResponse(resp, true)
 			os.Stdout.Write(ob)
 			xresp := selectresponse{}
 			err = xml.Unmarshal(resp.Body, &xresp)
@@ -126,6 +127,6 @@ func (self *Domain) Select(id *aws.Signer, what, where string, consist bool, ite
 }
 
 // Closes the underlying connection
-func (self *Domain) Close() (err os.Error) {
+func (self *Domain) Close() (err error) {
 	return self.conn.Close()
 }

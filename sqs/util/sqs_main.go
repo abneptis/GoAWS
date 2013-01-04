@@ -1,16 +1,17 @@
 package sqs_util
 
 import (
-	. "aws/flags"
-	. "aws/util/common"
 	"aws"
+	. "aws/flags"
 	"aws/sqs"
+	. "aws/util/common"
+	"errors"
+	"net/url"
 )
 
 import (
 	"flag"
 	"fmt"
-	"http"
 	"io"
 	"os"
 )
@@ -22,17 +23,16 @@ var flag_pop_timeout int
 var signer *aws.Signer
 var s *sqs.Service
 
-func DefaultSQSService() (id *aws.Signer, s *sqs.Service, err os.Error) {
+func DefaultSQSService() (id *aws.Signer, s *sqs.Service, err error) {
 	id, err = DefaultSigner()
 	if err == nil {
-		url, err := http.ParseURL(flag_endpoint_url)
+		url_, err := url.Parse(flag_endpoint_url)
 		if err == nil {
-			s = sqs.NewService(url)
+			s = sqs.NewService(url_)
 		}
 	}
 	return
 }
-
 
 func init() {
 	AddModule("sqs", func() {
@@ -40,13 +40,13 @@ func init() {
 		flag.IntVar(&flag_default_timeout, "sqs-queue-timeout", 90, "Queue timeout (create/delete)")
 		flag.IntVar(&flag_pop_timeout, "sqs-message-timeout", 90, "Queue timeout (pop/peek)")
 	})
-	Modules["sqs"].Setup = func() (err os.Error) {
+	Modules["sqs"].Setup = func() (err error) {
 		signer, s, err = DefaultSQSService()
 		return
 	}
-	Modules["sqs"].Calls["create"] = func(args []string) (err os.Error) {
+	Modules["sqs"].Calls["create"] = func(args []string) (err error) {
 		if len(args) != 1 {
-			return os.NewError("Usage: create QUEUE")
+			return errors.New("Usage: create QUEUE")
 		}
 		Q, err := s.CreateQueue(signer, args[0], flag_default_timeout)
 		if err == nil {
@@ -55,9 +55,9 @@ func init() {
 		return
 	}
 
-	Modules["sqs"].Calls["list"] = func(args []string) (err os.Error) {
+	Modules["sqs"].Calls["list"] = func(args []string) (err error) {
 		if len(args) != 0 {
-			return os.NewError("Usage: list")
+			return errors.New("Usage: list")
 		}
 		qs, err := s.ListQueues(signer, "")
 		if err == nil {
@@ -68,9 +68,9 @@ func init() {
 		return
 	}
 
-	Modules["sqs"].Calls["drop"] = func(args []string) (err os.Error) {
+	Modules["sqs"].Calls["drop"] = func(args []string) (err error) {
 		if len(args) != 1 {
-			return os.NewError("Usage: drop queue")
+			return errors.New("Usage: drop queue")
 		}
 		Q, err := s.CreateQueue(signer, args[0], flag_default_timeout)
 		if err == nil {
@@ -79,9 +79,9 @@ func init() {
 		return
 	}
 
-	Modules["sqs"].Calls["push"] = func(args []string) (err os.Error) {
+	Modules["sqs"].Calls["push"] = func(args []string) (err error) {
 		if len(args) != 1 {
-			return os.NewError("Usage: push queuename")
+			return errors.New("Usage: push queuename")
 		}
 		Q, err := s.CreateQueue(signer, args[0], flag_default_timeout)
 		if err == nil {
@@ -96,9 +96,9 @@ func init() {
 		}
 		return
 	}
-	Modules["sqs"].Calls["rm"] = func(args []string) (err os.Error) {
+	Modules["sqs"].Calls["rm"] = func(args []string) (err error) {
 		if len(args) != 2 {
-			return os.NewError("Usage: rm queuename receipthandle")
+			return errors.New("Usage: rm queuename receipthandle")
 		}
 		Q, err := s.CreateQueue(signer, args[0], flag_default_timeout)
 		if err == nil {
@@ -106,9 +106,9 @@ func init() {
 		}
 		return
 	}
-	Modules["sqs"].Calls["peek"] = func(args []string) (err os.Error) {
+	Modules["sqs"].Calls["peek"] = func(args []string) (err error) {
 		if len(args) != 1 {
-			return os.NewError("Usage: peek queuename")
+			return errors.New("Usage: peek queuename")
 		}
 		Q, err := s.CreateQueue(signer, args[0], flag_default_timeout)
 		var body []byte

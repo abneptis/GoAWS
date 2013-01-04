@@ -2,14 +2,15 @@ package sqs
 
 import (
 	"aws"
+	"errors"
+	"net/url"
 )
 
 import (
 	"crypto"
-	"http"
-	"os"
+	"encoding/xml"
+	"net/http"
 	"strconv"
-	"xml"
 )
 
 const (
@@ -18,20 +19,20 @@ const (
 )
 
 type Service struct {
-	URL  *http.URL
+	URL  *url.URL
 	conn *aws.Conn
 }
 
-func NewService(url *http.URL) *Service {
+func NewService(url_ *url.URL) *Service {
 	return &Service{
-		URL:  url,
-		conn: aws.NewConn(aws.URLDialer(url, nil)),
+		URL:  url_,
+		conn: aws.NewConn(aws.URLDialer(url_, nil)),
 	}
 }
 
-func (self *Service) ListQueues(id *aws.Signer, prefix string) (mq []string, err os.Error) {
+func (self *Service) ListQueues(id *aws.Signer, prefix string) (mq []string, err error) {
 	var resp *http.Response
-	parms := http.Values{}
+	parms := url.Values{}
 	parms.Set("Action", "ListQueues")
 	if prefix != "" {
 		parms.Set("QueueNamePrefix", prefix)
@@ -46,7 +47,7 @@ func (self *Service) ListQueues(id *aws.Signer, prefix string) (mq []string, err
 		if resp.StatusCode == http.StatusOK {
 			err = xml.Unmarshal(resp.Body, &xresp)
 		} else {
-			err = os.NewError("Unexpected response code")
+			err = errors.New("Unexpected response code")
 		}
 		if err == nil {
 			mq = xresp.QueueURL
@@ -57,9 +58,9 @@ func (self *Service) ListQueues(id *aws.Signer, prefix string) (mq []string, err
 }
 
 // Create a queue, returning the Queue object.
-func (self *Service) CreateQueue(id *aws.Signer, name string, dvtimeout int) (mq *Queue, err os.Error) {
+func (self *Service) CreateQueue(id *aws.Signer, name string, dvtimeout int) (mq *Queue, err error) {
 	var resp *http.Response
-	parms := http.Values{}
+	parms := url.Values{}
 	parms.Set("Action", "CreateQueue")
 	parms.Set("QueueName", name)
 	parms.Set("DefaultVisibilityTimeout", strconv.Itoa(dvtimeout))
@@ -74,14 +75,14 @@ func (self *Service) CreateQueue(id *aws.Signer, name string, dvtimeout int) (mq
 				xmlresp := createQueueResponse{}
 				err = xml.Unmarshal(resp.Body, &xmlresp)
 				if err == nil {
-					var qrl *http.URL
-					qrl, err = http.ParseURL(xmlresp.QueueURL)
+					var qrl *url.URL
+					qrl, err = url.Parse(xmlresp.QueueURL)
 					if err == nil {
 						mq = NewQueue(qrl)
 					}
 				}
 			} else {
-				err = os.NewError("Unexpected response")
+				err = errors.New("Unexpected response")
 			}
 		}
 	}
@@ -100,6 +101,6 @@ type listQueuesResponse struct {
 }
 
 // Closes the underlying connection
-func (self *Service) Close() (err os.Error) {
+func (self *Service) Close() (err error) {
 	return self.conn.Close()
 }

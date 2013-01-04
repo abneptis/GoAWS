@@ -2,29 +2,29 @@ package s3
 
 import (
 	"aws"
+	"net/url"
 )
 
 import (
-	"http"
-	"os"
+	"encoding/xml"
+	"net/http"
 	"path"
-	"xml"
 )
 
 type Service struct {
-	URL  *http.URL
+	URL  *url.URL
 	conn *aws.Conn
 }
 
 // Initilalize a new Service object with a specific
 // S3 endpoint.  If URL is omitted, it defaults to the
 // us-east endpoint over HTTPS (https://s3.amazonaws.com/) 
-func NewService(url *http.URL) (s *Service) {
+func NewService(url_ *url.URL) (s *Service) {
 	s = &Service{
-		URL: url,
+		URL: url_,
 	}
 	if s.URL == nil {
-		s.URL, _ = http.ParseURL("https://" + USEAST_HOST + "/")
+		s.URL, _ = url.Parse("https://" + USEAST_HOST + "/")
 	}
 	s.conn = aws.NewConn(aws.URLDialer(s.URL, nil))
 	return
@@ -45,8 +45,8 @@ func s3Path(bucket, key string) string {
 	return path.Join("/", bucket, key)
 }
 
-func (self *Service) bucket_url(bucket string) *http.URL {
-	return &http.URL{
+func (self *Service) bucket_url(bucket string) *url.URL {
+	return &url.URL{
 		Host:   self.URL.Host,
 		Path:   path.Join(self.URL.Path, s3Path(bucket, "")),
 		Scheme: self.URL.Scheme,
@@ -54,7 +54,7 @@ func (self *Service) bucket_url(bucket string) *http.URL {
 }
 
 // Deletes the named bucket from the S3 service.
-func (self *Service) DeleteBucket(id *aws.Signer, name string) (err os.Error) {
+func (self *Service) DeleteBucket(id *aws.Signer, name string) (err error) {
 	var resp *http.Response
 	hreq := aws.NewRequest(self.bucket_url(name), "DELETE", nil, nil)
 	err = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
@@ -76,7 +76,7 @@ func (self *Service) DeleteBucket(id *aws.Signer, name string) (err os.Error) {
 // Creates a new bucket
 // TODO: Will (probably) create the bucket in US-east no matter
 // what underlying endpoint you've chosen.
-func (self *Service) CreateBucket(id *aws.Signer, name string) (err os.Error) {
+func (self *Service) CreateBucket(id *aws.Signer, name string) (err error) {
 	var resp *http.Response
 	hreq := aws.NewRequest(self.bucket_url(name), "PUT", nil, nil)
 	err = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
@@ -91,10 +91,9 @@ func (self *Service) CreateBucket(id *aws.Signer, name string) (err os.Error) {
 	return
 }
 
-
 // Returns a list of bucket names known by the endpoint.  Depending on the
 // endpoint used, your list may be global or regional in nature.
-func (self *Service) ListBuckets(id *aws.Signer) (out []string, err os.Error) {
+func (self *Service) ListBuckets(id *aws.Signer) (out []string, err error) {
 	var resp *http.Response
 	hreq := aws.NewRequest(self.bucket_url(""), "GET", nil, nil)
 	err = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
@@ -121,6 +120,6 @@ type listAllMyBucketsResult struct {
 }
 
 // Closes the underlying connection
-func (self *Service) Close() (err os.Error) {
+func (self *Service) Close() (err error) {
 	return self.conn.Close()
 }

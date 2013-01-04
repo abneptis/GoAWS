@@ -2,24 +2,26 @@ package s3
 
 import (
 	"aws"
+	"errors"
+	"net/url"
 )
 
 import (
 	"bytes"
-	"http"
+	"encoding/xml"
 	"io"
 	"io/ioutil"
 	"net"
+	"net/http"
+	"net/http/httputil"
 	"os"
 	"path"
-	"xml"
 )
-
 
 // Represents a URL and connection to an S3 bucket.
 type Bucket struct {
 	Name string
-	URL  *http.URL
+	URL  *url.URL
 	conn *aws.Conn
 }
 
@@ -32,15 +34,15 @@ type Bucket struct {
 // If you omit conn, the dialer used will be based off the VHost of your bucket (if possible),
 // to ensure best performance (e.g., endpoint associated w/ your bucket, and any
 // regional lb's)
-func NewBucket(u *http.URL, Name string, conn *aws.Conn) (b *Bucket) {
+func NewBucket(u *url.URL, Name string, conn *aws.Conn) (b *Bucket) {
 	if u == nil {
-		u = &http.URL{Scheme: "https", Host: USEAST_HOST, Path: "/"}
+		u = &url.URL{Scheme: "https", Host: USEAST_HOST, Path: "/"}
 	}
 	if conn == nil {
 		vname := VhostName(Name, u)
 		addrs, err := net.LookupHost(vname)
 		if err == nil && len(addrs) > 0 {
-			dial_url := &http.URL{
+			dial_url := &url.URL{
 				Scheme: u.Scheme,
 				Host:   vname,
 				Path:   u.Path,
@@ -59,22 +61,21 @@ func NewBucket(u *http.URL, Name string, conn *aws.Conn) (b *Bucket) {
 }
 
 // Returns the vhost name of the bucket (bucket.s3.amazonaws.com)
-func VhostName(b string, ep *http.URL) string {
+func VhostName(b string, ep *url.URL) string {
 	return b + "." + ep.Host
 }
 
-func (self *Bucket) key_url(key string) *http.URL {
-	return &http.URL{
+func (self *Bucket) key_url(key string) *url.URL {
+	return &url.URL{
 		Scheme: self.URL.Scheme,
 		Host:   self.URL.Host,
 		Path:   path.Join(self.URL.Path, self.Name, key),
 	}
 }
 
-
 // Will open a local file, size it, and upload it to the named key.
 // This is a convenience wrapper aroudn PutFile.
-func (self *Bucket) PutLocalFile(id *aws.Signer, key, file string) (err os.Error) {
+func (self *Bucket) PutLocalFile(id *aws.Signer, key, file string) (err error) {
 	fp, err := os.Open(file)
 	if err == nil {
 		defer fp.Close()
@@ -86,14 +87,14 @@ func (self *Bucket) PutLocalFile(id *aws.Signer, key, file string) (err os.Error
 // Will put an open file descriptor to the named key.  Size is determined
 // by statting the fd (so a partially read file will not work).
 // TODO: ACL's & content-type/headers support
-func (self *Bucket) PutFile(id *aws.Signer, key string, fp *os.File) (err os.Error) {
+func (self *Bucket) PutFile(id *aws.Signer, key string, fp *os.File) (err error) {
 	var resp *http.Response
 	if fp == nil {
-		return os.NewError("invalid file descriptor")
+		return errors.New("invalid file descriptor")
 	}
 	fi, err := fp.Stat()
 	if err == nil {
-		fsize := fi.Size
+		fsize := fi.Size()
 		hdr := http.Header{}
 		hreq := aws.NewRequest(self.key_url(key), "PUT", hdr, nil)
 		hreq.ContentLength = fsize
@@ -110,8 +111,7 @@ func (self *Bucket) PutFile(id *aws.Signer, key string, fp *os.File) (err os.Err
 	return
 }
 
-
-func (self *Bucket) PutKeyBytes(id *aws.Signer, key string, buff []byte, hdr http.Header) (err os.Error) {
+func (self *Bucket) PutKeyBytes(id *aws.Signer, key string, buff []byte, hdr http.Header) (err error) {
 	var resp *http.Response
 	hreq := aws.NewRequest(self.key_url(key), "PUT", hdr, nil)
 	hreq.ContentLength = int64(len(buff))
@@ -130,7 +130,7 @@ func (self *Bucket) PutKeyBytes(id *aws.Signer, key string, buff []byte, hdr htt
 // NB: Length is required as we do not buffer the reader
 // NB(2): We do NOT close your reader (hence the io.Reader), 
 // we wrap it with a NopCloser.
-func (self *Bucket) PutKeyReader(id *aws.Signer, key string, r io.Reader, l int64, hdr http.Header) (err os.Error) {
+func (self *Bucket) PutKeyReader(id *aws.Signer, key string, r io.Reader, l int64, hdr http.Header) (err error) {
 	var resp *http.Response
 	hreq := aws.NewRequest(self.key_url(key), "PUT", hdr, nil)
 	hreq.ContentLength = l
@@ -143,7 +143,7 @@ func (self *Bucket) PutKeyReader(id *aws.Signer, key string, r io.Reader, l int6
 			err = aws.CodeToError(resp.StatusCode)
 		}
 		if err == aws.ErrorUnexpectedResponse {
-			ob, _ := http.DumpResponse(resp, true)
+			ob, _ := httputil.DumpResponse(resp, true)
 			os.Stdout.Write(ob)
 		}
 	}
@@ -151,10 +151,10 @@ func (self *Bucket) PutKeyReader(id *aws.Signer, key string, r io.Reader, l int6
 }
 
 // Deletes the named key from the bucket.  To delete a bucket, see *Service.DeleteBucket()
-func (self *Bucket) Delete(id *aws.Signer, key string) (err os.Error) {
+func (self *Bucket) Delete(id *aws.Signer, key string) (err error) {
 	var resp *http.Response
 	if key == "" {
-		return os.NewError("Key cannot be empty!")
+		return errors.New("Key cannot be empty!")
 	}
 	hreq := aws.NewRequest(self.key_url(key), "DELETE", nil, nil)
 	err = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
@@ -173,7 +173,7 @@ func (self *Bucket) Delete(id *aws.Signer, key string) (err os.Error) {
 
 // Opens the named key and copys it to the named io.Writer IFF the response.Status is 200.
 // Also returns the http headers for convenience (regardless of status code, as long as a  resp is generated).
-func (self *Bucket) GetKey(id *aws.Signer, key string, w io.Writer) (hdr http.Header, err os.Error) {
+func (self *Bucket) GetKey(id *aws.Signer, key string, w io.Writer) (hdr http.Header, err error) {
 	var resp *http.Response
 	hreq := aws.NewRequest(self.key_url(key), "GET", nil, nil)
 	err = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
@@ -196,14 +196,14 @@ func (self *Bucket) GetKey(id *aws.Signer, key string, w io.Writer) (hdr http.He
 
 // Performs a HEAD request on the bucket and returns nil of the key appears
 // valid (returns 200).
-func (self *Bucket) Exists(id *aws.Signer, key string) (err os.Error) {
+func (self *Bucket) Exists(id *aws.Signer, key string) (err error) {
 	_, err = self.HeadKey(id, key)
 	return
 }
 
 // Performs a HEAD request on the bucket and returns the response object.
 // The body is CLOSED, and it is an error to try and read from it.
-func (self *Bucket) HeadKey(id *aws.Signer, key string) (resp *http.Response, err os.Error) {
+func (self *Bucket) HeadKey(id *aws.Signer, key string) (resp *http.Response, err error) {
 	hreq := aws.NewRequest(self.key_url(key), "HEAD", nil, nil)
 	err = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
 	if err == nil {
@@ -224,18 +224,20 @@ type owner struct {
 // Walks a bucket and writes the resulting strings to the channel.
 // * There is currently NO (correct) way to abort a running walk.
 func (self *Bucket) ListKeys(id *aws.Signer,
-prefix, delim, marker string, out chan<- string) (err os.Error) {
+	prefix, delim, marker string, out chan<- string) (err error) {
 	var done bool
 	var resp *http.Response
 	var last string
-	form := http.Values{"prefix": []string{prefix},
-											"delimeter": []string{delim},
-											"marker":[]string{marker}}
+	form := url.Values{"prefix": []string{prefix},
+		"delimeter": []string{delim},
+		"marker":    []string{marker}}
 	for err == nil && !done {
 		result := listBucketResult{}
 		result.Prefix = prefix
 		result.Marker = marker
-		if last != "" {form.Set("marker", last) }
+		if last != "" {
+			form.Set("marker", last)
+		}
 
 		hreq := aws.NewRequest(self.key_url("/"), "GET", nil, form)
 		err = id.SignRequestV1(hreq, aws.CanonicalizeS3, 15)
@@ -252,7 +254,7 @@ prefix, delim, marker string, out chan<- string) (err os.Error) {
 						out <- result.Contents[i].Key
 					}
 					if len(result.Contents) > 0 {
-						last = result.Contents[len(result.Contents) - 1].Key
+						last = result.Contents[len(result.Contents)-1].Key
 					}
 					done = !result.IsTruncated
 				}
@@ -283,6 +285,6 @@ type keyItem struct {
 }
 
 // Closes the underlying connection
-func (self *Bucket) Close() (err os.Error) {
+func (self *Bucket) Close() (err error) {
 	return self.conn.Close()
 }

@@ -1,29 +1,29 @@
 package sdb_util
 
 import (
-	. "aws/flags"
-	. "aws/util/common"
 	"aws"
+	. "aws/flags"
 	"aws/sdb"
+	. "aws/util/common"
+	"errors"
+	"net/url"
 )
 
 import (
 	"flag"
 	"fmt"
-	"http"
-	"os"
 )
 
 var flag_endpoint_url string
 var id *aws.Signer
 var service *sdb.Service
 
-func DefaultSDBService() (id *aws.Signer, s *sdb.Service, err os.Error) {
+func DefaultSDBService() (id *aws.Signer, s *sdb.Service, err error) {
 	id, err = DefaultSigner()
 	if err == nil {
-		url, err := http.ParseURL(flag_endpoint_url)
+		url_, err := url.Parse(flag_endpoint_url)
 		if err == nil {
-			s = sdb.NewService(url)
+			s = sdb.NewService(url_)
 		}
 	}
 	return
@@ -34,13 +34,13 @@ func init() {
 		flag.StringVar(&flag_endpoint_url, "sdb-endpoint", "https://sdb.amazonaws.com/", "Endpoint to use for S3 calls")
 	})
 
-	Modules["sdb"].Setup = func() (err os.Error) {
+	Modules["sdb"].Setup = func() (err error) {
 		id, service, err = DefaultSDBService()
 		return
 	}
-	Modules["sdb"].Calls["rm"] = func(args []string) (err os.Error) {
+	Modules["sdb"].Calls["rm"] = func(args []string) (err error) {
 		if len(args) < 2 {
-			return os.NewError("Usage: rm domain_name item [...]")
+			return errors.New("Usage: rm domain_name item [...]")
 		}
 		d := service.Domain(args[0])
 		args = args[1:]
@@ -53,9 +53,9 @@ func init() {
 		return
 	}
 
-	Modules["sdb"].Calls["get"] = func(args []string) (err os.Error) {
+	Modules["sdb"].Calls["get"] = func(args []string) (err error) {
 		if len(args) < 2 {
-			return os.NewError("Usage: get domain_name item [...]")
+			return errors.New("Usage: get domain_name item [...]")
 		}
 		d := service.Domain(args[0])
 		args = args[1:]
@@ -69,23 +69,23 @@ func init() {
 		}
 		return
 	}
-	Modules["sdb"].Calls["create"] = func(args []string) (err os.Error) {
+	Modules["sdb"].Calls["create"] = func(args []string) (err error) {
 		if len(args) != 1 {
-			return os.NewError("Usage: create domain_name")
+			return errors.New("Usage: create domain_name")
 		}
 		err = service.CreateDomain(id, args[0])
 		return
 	}
-	Modules["sdb"].Calls["drop"] = func(args []string) (err os.Error) {
+	Modules["sdb"].Calls["drop"] = func(args []string) (err error) {
 		if len(args) != 0 {
-			return os.NewError("Usage: drop domain_name")
+			return errors.New("Usage: drop domain_name")
 		}
 		err = service.DestroyDomain(id, args[0])
 		return
 	}
-	Modules["sdb"].Calls["select"] = func(args []string) (err os.Error) {
+	Modules["sdb"].Calls["select"] = func(args []string) (err error) {
 		if len(args) < 2 || len(args) > 3 {
-			return os.NewError("Usage: service.lect ('*'|col,col2,...) domain_name [extended expression]")
+			return errors.New("Usage: service.lect ('*'|col,col2,...) domain_name [extended expression]")
 		}
 		colstr := args[0]
 		d := service.Domain(args[1])
@@ -107,7 +107,7 @@ func init() {
 
 		return
 	}
-	Modules["sdb"].Calls["domains"] = func(args []string) (err os.Error) {
+	Modules["sdb"].Calls["domains"] = func(args []string) (err error) {
 		doms, err := service.ListDomains(id)
 		for i := range doms {
 			fmt.Printf("%s\n", doms[i])
