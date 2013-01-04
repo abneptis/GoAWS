@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net"
 	"sync"
+	"time"
 	//  "log"
 )
 
@@ -25,25 +26,19 @@ type Dialer func() (net.Conn, error)
 // up, and trigger closure of the underlying socket (to
 // be reopened on the next call)
 type ReusableConn struct {
-	lock         *sync.Mutex
-	dialer       Dialer
-	conn         net.Conn
-	readTimeout  int64
-	writeTimeout int64
+	lock          *sync.Mutex
+	dialer        Dialer
+	conn          net.Conn
+	readDeadline  time.Time
+	writeDeadline time.Time
 }
-
-const (
-	_UNSET_TIMEOUT int64 = -1
-)
 
 // Create a new reusable connection with a sepcific dialer.
 func NewReusableConnection(d Dialer) (c *ReusableConn) {
 	return &ReusableConn{
-		dialer:       d,
-		conn:         nil,
-		lock:         &sync.Mutex{},
-		readTimeout:  _UNSET_TIMEOUT,
-		writeTimeout: _UNSET_TIMEOUT,
+		dialer: d,
+		conn:   nil,
+		lock:   &sync.Mutex{},
 	}
 }
 
@@ -56,18 +51,18 @@ func (self *ReusableConn) Dial() (err error) {
 }
 
 // Dial will redial if conn is nil, and set
-// timeouts if they've been set by the caller.
+// deadlines if they've been set by the caller.
 // 
 // It simply returns nil if the socket appears already connected
 func (self *ReusableConn) dial() (err error) {
 	// log.Printf("Private dial() called (%v)", self.conn)
 	if self.conn == nil {
 		self.conn, err = self.dialer()
-		if err == nil && self.readTimeout != _UNSET_TIMEOUT {
-			err = self.setReadTimeout(self.readTimeout)
+		if err == nil && !self.readDeadline.IsZero() {
+			err = self.setReadDeadline(self.readDeadline)
 		}
-		if err == nil && self.writeTimeout != _UNSET_TIMEOUT {
-			err = self.setWriteTimeout(self.writeTimeout)
+		if err == nil && !self.writeDeadline.IsZero() {
+			err = self.setWriteDeadline(self.writeDeadline)
 		}
 	}
 	// log.Printf("Private dial() complete (%v)", self.conn)
@@ -149,49 +144,49 @@ func (self *ReusableConn) Write(out []byte) (n int, err error) {
 	return self.write(out)
 }
 
-func (self *ReusableConn) setReadTimeout(t int64) (err error) {
+func (self *ReusableConn) setReadDeadline(t time.Time) (err error) {
 	err = self.dial()
 	if err == nil {
-		err = self.conn.SetReadTimeout(t)
+		err = self.conn.SetReadDeadline(t)
 		if err == nil {
-			self.readTimeout = t
+			self.readDeadline = t
 		}
 	}
 	return
 }
 
-func (self *ReusableConn) setWriteTimeout(t int64) (err error) {
+func (self *ReusableConn) setWriteDeadline(t time.Time) (err error) {
 	err = self.dial()
 	if err == nil {
-		err = self.conn.SetWriteTimeout(t)
+		err = self.conn.SetWriteDeadline(t)
 		if err == nil {
-			self.writeTimeout = t
+			self.writeDeadline = t
 		}
 	}
 	return
 }
 
-// Sets the read timeout on the underlying socket, as well
+// Sets the read deadline on the underlying socket, as well
 // as an internal flag for any future re-opened connections.
-func (self *ReusableConn) SetReadTimeout(t int64) (err error) {
+func (self *ReusableConn) SetReadDeadline(t time.Time) (err error) {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	return self.setReadTimeout(t)
+	return self.setReadDeadline(t)
 }
 
-// Sets the write timeout on the underlying socket, as well
+// Sets the write deadline on the underlying socket, as well
 // as an internal flag for any future re-opened connections.
-func (self *ReusableConn) SetWriteTimeout(t int64) (err error) {
+func (self *ReusableConn) SetWriteDeadline(t time.Time) (err error) {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	return self.setWriteTimeout(t)
+	return self.setWriteDeadline(t)
 }
 
-// Conveinience function for Set(read|write)timeout
-func (self *ReusableConn) SetTimeout(t int64) (err error) {
-	err = self.SetReadTimeout(t)
+// Convenience function for Set(Read|Write)Deadline
+func (self *ReusableConn) SetDeadline(t time.Time) (err error) {
+	err = self.SetReadDeadline(t)
 	if err == nil {
-		err = self.SetWriteTimeout(t)
+		err = self.SetWriteDeadline(t)
 	}
 	return
 }
