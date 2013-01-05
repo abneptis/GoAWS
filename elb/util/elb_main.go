@@ -1,11 +1,11 @@
 package elb_util
 
 import (
-	elb ".."
-	aws "../.."
-	. "../../flags"
-	. "../../util/common"
 	"errors"
+	"github.com/abneptis/GoAWS"
+	"github.com/abneptis/GoAWS/elb"
+	. "github.com/abneptis/GoAWS/flags"
+	. "github.com/abneptis/GoAWS/util/common"
 	"net/url"
 )
 

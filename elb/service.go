@@ -1,8 +1,8 @@
 package elb
 
 import (
-	aws ".."
 	"errors"
+	"github.com/abneptis/GoAWS"
 	"net/url"
 )
 

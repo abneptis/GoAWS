@@ -1,8 +1,8 @@
 package sdb
 
 import (
-	aws ".."
 	"errors"
+	"github.com/abneptis/GoAWS"
 	"net/url"
 )
 

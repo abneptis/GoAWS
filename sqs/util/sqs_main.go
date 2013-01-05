@@ -1,11 +1,11 @@
 package sqs_util
 
 import (
-	aws "../.."
-	. "../../flags"
-	"../../sqs"
-	. "../../util/common"
 	"errors"
+	"github.com/abneptis/GoAWS"
+	. "github.com/abneptis/GoAWS/flags"
+	"github.com/abneptis/GoAWS/sqs"
+	. "github.com/abneptis/GoAWS/util/common"
 	"net/url"
 )
 

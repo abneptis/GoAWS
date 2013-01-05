@@ -1,10 +1,10 @@
 package main
 
 import (
-	aws "../.."
-	. "../../flags"
-	"../../s3"
 	"errors"
+	"github.com/abneptis/GoAWS"
+	. "github.com/abneptis/GoAWS/flags"
+	"github.com/abneptis/GoAWS/s3"
 	"net/url"
 )
 

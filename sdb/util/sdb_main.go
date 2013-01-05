@@ -1,11 +1,11 @@
 package sdb_util
 
 import (
-	sdb ".."
-	aws "../.."
-	. "../../flags"
-	. "../../util/common"
 	"errors"
+	"github.com/abneptis/GoAWS"
+	. "github.com/abneptis/GoAWS/flags"
+	"github.com/abneptis/GoAWS/sdb"
+	. "github.com/abneptis/GoAWS/util/common"
 	"net/url"
 )
 

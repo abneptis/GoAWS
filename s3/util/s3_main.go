@@ -1,11 +1,11 @@
 package s3_util
 
 import (
-	s3 ".."
-	aws "../.."
-	. "../../flags"
-	. "../../util/common"
 	"errors"
+	"github.com/abneptis/GoAWS"
+	. "github.com/abneptis/GoAWS/flags"
+	"github.com/abneptis/GoAWS/s3"
+	. "github.com/abneptis/GoAWS/util/common"
 	"net/url"
 )
 
