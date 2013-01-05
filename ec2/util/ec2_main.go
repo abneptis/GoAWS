@@ -1,17 +1,16 @@
 package ec2_util
 
 import (
-	. "aws/util/common"
-	. "aws/flags"
-	"aws/ec2"
-	"aws"
+	"github.com/abneptis/GoAWS"
+	"github.com/abneptis/GoAWS/ec2"
+	. "github.com/abneptis/GoAWS/flags"
+	. "github.com/abneptis/GoAWS/util/common"
+	"net/url"
 )
 
 import (
-	"http"
-	"os"
-	"fmt"
 	"flag"
+	"fmt"
 )
 
 // Safety warning
@@ -24,12 +23,12 @@ import (
 var flag_endpoint_url string = ""
 
 // Convenience method to clean up calls.
-func DefaultEC2Service() (id *aws.Signer, s *ec2.Service, err os.Error) {
+func DefaultEC2Service() (id *aws.Signer, s *ec2.Service, err error) {
 	id, err = DefaultSigner()
 	if err == nil {
-		url, err := http.ParseURL(flag_endpoint_url)
+		url_, err := url.Parse(flag_endpoint_url)
 		if err == nil {
-			s = ec2.NewService(url)
+			s = ec2.NewService(url_)
 		}
 	}
 	return
@@ -39,7 +38,7 @@ func init() {
 	AddModule("ec2", func() {
 		flag.StringVar(&flag_endpoint_url, "ec2-endpoint", "https://ec2.amazonaws.com/", "Endpoint to use for EC2 calls")
 	})
-	Modules["ec2"].Calls["instances"] = func(args []string) (err os.Error) {
+	Modules["ec2"].Calls["instances"] = func(args []string) (err error) {
 		id, s, err := DefaultEC2Service()
 		if err != nil {
 			return

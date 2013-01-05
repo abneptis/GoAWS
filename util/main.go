@@ -1,19 +1,20 @@
 package main
 
 import (
-	. "aws/util/common" // AWS ID Flags
-	. "aws/flags"       // AWS ID Flags
-	"aws/ec2/ec2_util"
-	"aws/elb/elb_util"
-	"aws/s3/s3_util"
-	"aws/sqs/sqs_util"
-	"aws/sdb/sdb_util"
+	"errors" // AWS ID Flags
+	ec2_util "github.com/abneptis/GoAWS/ec2/util"
+	elb_util "github.com/abneptis/GoAWS/elb/util"
+	. "github.com/abneptis/GoAWS/flags" // AWS ID Flags
+	s3_util "github.com/abneptis/GoAWS/s3/util"
+	sdb_util "github.com/abneptis/GoAWS/sdb/util"
+	sqs_util "github.com/abneptis/GoAWS/sqs/util"
+	. "github.com/abneptis/GoAWS/util/common"
 )
 
 import (
 	"flag"
-	"os"
 	"fmt"
+	"os"
 )
 
 func keys(in map[string]interface{}) (out []string) {
@@ -32,7 +33,7 @@ func main() {
 	module := flag.Arg(0)
 	cmd := flag.Arg(1)
 	os.Args = os.Args[2:]
-	var err os.Error
+	var err error
 	modulenames := []string{}
 	for k, _ := range Modules {
 		modulenames = append(modulenames, k)
@@ -46,11 +47,11 @@ func main() {
 				err = c(flag.Args())
 			}
 		} else {
-			err = os.NewError(fmt.Sprintf("Invalid subcommand: %s, expected one of %v",
+			err = errors.New(fmt.Sprintf("Invalid subcommand: %s, expected one of %v",
 				cmd, m.Names()))
 		}
 	} else {
-		err = os.NewError(fmt.Sprintf("Invalid modulle : %s, expected one of %v",
+		err = errors.New(fmt.Sprintf("Invalid modulle : %s, expected one of %v",
 			flag.Arg(0), modulenames))
 
 	}

@@ -1,14 +1,16 @@
 package elb
 
 import (
-	"aws"
+	"errors"
+	"github.com/abneptis/GoAWS"
+	"net/url"
 )
 
 import (
 	"crypto"
-	"http"
+	"encoding/xml"
 	. "fmt"
-	"xml"
+	"net/http/httputil"
 	"os"
 	"strconv"
 )
@@ -19,14 +21,14 @@ const (
 )
 
 type Service struct {
-	URL  *http.URL
+	URL  *url.URL
 	conn *aws.Conn
 }
 
-func NewService(url *http.URL) *Service {
+func NewService(url_ *url.URL) *Service {
 	return &Service{
-		URL:  url,
-		conn: aws.NewConn(aws.URLDialer(url, nil)),
+		URL:  url_,
+		conn: aws.NewConn(aws.URLDialer(url_, nil)),
 	}
 }
 
@@ -37,14 +39,14 @@ type Listener struct {
 	SSLCertificateID string
 }
 
-func (self Listener) SetValues(v http.Values, i int) {
+func (self Listener) SetValues(v url.Values, i int) {
 	v.Set(Sprintf("Listeners.members.%d.LoadBalancerPort", i), strconv.Itoa(self.LoadBalancerPort))
 	v.Set(Sprintf("Listeners.members.%d.InstancePort", i), strconv.Itoa(self.InstancePort))
 	v.Set(Sprintf("Listeners.members.%d.Protocol", i), self.Protocol)
 }
 
-func (self *Service) CreateLoadBalancer(id *aws.Signer, name string, zones []string, listeners []Listener) (err os.Error) {
-	parms := http.Values{}
+func (self *Service) CreateLoadBalancer(id *aws.Signer, name string, zones []string, listeners []Listener) (err error) {
+	parms := url.Values{}
 	parms.Set("Action", "CreateLoadBalancer")
 	parms.Set("LoadBalancerName", name)
 	for zi := range zones {
@@ -61,15 +63,15 @@ func (self *Service) CreateLoadBalancer(id *aws.Signer, name string, zones []str
 	resp, err := self.conn.Request(req)
 	if err == nil {
 		defer resp.Body.Close()
-		ob, _ := http.DumpResponse(resp, true)
+		ob, _ := httputil.DumpResponse(resp, true)
 		os.Stdout.Write(ob)
 	}
 	return
 
 }
 
-func (self *Service) DescribeLoadBalancers(id *aws.Signer) (lbs []LoadBalancerDescription, err os.Error) {
-	parms := http.Values{}
+func (self *Service) DescribeLoadBalancers(id *aws.Signer) (lbs []LoadBalancerDescription, err error) {
+	parms := url.Values{}
 	parms.Set("Action", "DescribeLoadBalancers")
 	req := aws.NewRequest(self.URL, "GET", nil, parms)
 	err = id.SignRequestV2(req, aws.Canonicalize, DEFAULT_VERSION, 0)
@@ -80,7 +82,7 @@ func (self *Service) DescribeLoadBalancers(id *aws.Signer) (lbs []LoadBalancerDe
 	if err == nil {
 		qr := LoadBalancerQueryResult{}
 		defer resp.Body.Close()
-		err = xml.Unmarshal(resp.Body, &qr)
+		err = xml.NewDecoder(resp.Body).Decode(&qr)
 		if err == nil {
 			lbs = qr.LoadBalancerDescription
 		}
@@ -89,11 +91,10 @@ func (self *Service) DescribeLoadBalancers(id *aws.Signer) (lbs []LoadBalancerDe
 	return
 }
 
-
 // Users note: amazon will only return an error if the request is bad,
 // thus an error will not be raised when deleting a non-existent LB.
-func (self *Service) DeleteLoadBalancer(id *aws.Signer, name string) (err os.Error) {
-	parms := http.Values{}
+func (self *Service) DeleteLoadBalancer(id *aws.Signer, name string) (err error) {
+	parms := url.Values{}
 	parms.Set("Action", "DeleteLoadBalancer")
 	parms.Set("LoadBalancerName", name)
 	req := aws.NewRequest(self.URL, "GET", nil, parms)
@@ -110,16 +111,16 @@ func (self *Service) DeleteLoadBalancer(id *aws.Signer, name string) (err os.Err
 		err = aws.CodeToError(resp.StatusCode)
 	}
 	qr := LoadBalancerQueryResult{}
-	err = xml.Unmarshal(resp.Body, &qr)
+	err = xml.NewDecoder(resp.Body).Decode(&qr)
 	if err == nil {
 		if qr.ErrorCode != "" {
-			err = os.NewError(qr.ErrorCode)
+			err = errors.New(qr.ErrorCode)
 		}
 	}
 	return
 }
 
 // Closes the underlying connection
-func (self *Service) Close() (err os.Error) {
+func (self *Service) Close() (err error) {
 	return self.conn.Close()
 }

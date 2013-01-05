@@ -1,6 +1,5 @@
 package sdb
 
-
 type listdomainsresponse struct {
 	Domains      []string "ListDomainsResult>DomainName"
 	NextToken    string   "ListDomainsResult>NextToken"
@@ -9,7 +8,6 @@ type listdomainsresponse struct {
 	ErrorMessage string   "Errors>Error>Message"
 	ErrorCode    string   "Errors>Error>Code"
 }
-
 
 type getattributesresponse struct {
 	Attributes   []Attribute "GetAttributesResult>Attribute"

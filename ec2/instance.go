@@ -1,9 +1,9 @@
 package ec2
 
-
 import (
-	"xml"
+	"encoding/xml"
 )
+
 /*
   The XML package doesn't do deeply-nested types with reflection well,
  so much of the functionality provided is simply hacks
@@ -26,7 +26,6 @@ type ReservationSet struct {
 	Groups        []GroupSet "groupSet>item"
 	Instances     []Instance "instancesSet>item"
 }
-
 
 // At the level of depth we're at, XML's 
 //  not happy with us

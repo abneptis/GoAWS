@@ -4,7 +4,6 @@ import (
 	"crypto"
 )
 
-
 // Do S3 endpoints actually play any role?
 const (
 	USWEST_HOST      = "us-west-1.s3.amazonaws.com"

@@ -1,8 +1,8 @@
 package aws
 
 import (
-	"os"
-	"http"
+	"errors"
+	"net/http"
 )
 
 const (
@@ -10,13 +10,12 @@ const (
 	DEFAULT_SIGNATURE_METHOD  = "HmacSHA256"
 )
 
+var ErrorNotFound = errors.New("Not found")
+var ErrorUnexpectedResponse = errors.New("Unexpected response code")
+var ErrorConflicts = errors.New("Conflicts with another resources")
+var ErrorForbidden = errors.New("Access denied")
 
-var ErrorNotFound os.Error = os.NewError("Not found")
-var ErrorUnexpectedResponse os.Error = os.NewError("Unexpected response code")
-var ErrorConflicts os.Error = os.NewError("Conflicts with another resources")
-var ErrorForbidden os.Error = os.NewError("Access denied")
-
-func CodeToError(i int) (err os.Error) {
+func CodeToError(i int) (err error) {
 	switch i {
 	case http.StatusOK:
 	case http.StatusNotFound:

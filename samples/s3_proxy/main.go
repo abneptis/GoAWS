@@ -1,13 +1,13 @@
 package main
 
 import (
-	. "log"
+	"encoding/json"
 	"flag"
-	"http"
+	. "log"
 	"net"
-	"path"
-	"json"
+	"net/http"
 	"os"
+	"path"
 	"strconv"
 )
 
@@ -42,7 +42,7 @@ func (self Service) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			}
 			// We're only copying the body in for 200's.
 			if resp.ContentLength > 0 && err == nil {
-				rw.Header().Set("Content-Length", strconv.Itoa64(resp.ContentLength))
+				rw.Header().Set("Content-Length", strconv.FormatInt(resp.ContentLength, 10))
 			}
 		}
 		outcode := http.StatusInternalServerError

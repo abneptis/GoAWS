@@ -1,7 +1,7 @@
 package sdb
 
 import (
-	"http"
+	"net/url"
 	"strconv"
 )
 
@@ -26,8 +26,8 @@ const (
 	EXPECTED_LIST  AttrListType = "Expected."
 )
 
-func (self AttributeList) Values(afix AttrListType) (v http.Values) {
-	v = http.Values{}
+func (self AttributeList) Values(afix AttrListType) (v url.Values) {
+	v = url.Values{}
 	for i := range self {
 		prefix := string(afix) + strconv.Itoa(i+1) + "."
 		v.Set(prefix+"Name", self[i].Name)
@@ -51,7 +51,6 @@ func (self AttributeList) Values(afix AttrListType) (v http.Values) {
 	}
 	return
 }
-
 
 // miscelanious helper functions.
 func AttrMissing(name string) Attribute {

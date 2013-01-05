@@ -1,7 +1,7 @@
 package aws
 
 import (
-	"http"
+	"net/url"
 	"sort"
 )
 
@@ -12,12 +12,12 @@ import (
 //
 // Sorted Escape also sorts the keys before joining them (needed
 // for canonicalization).
-func SortedEscape(v http.Values) (out string) {
+func SortedEscape(v url.Values) (out string) {
 	keys := []string{}
 	for k, _ := range v {
 		keys = append(keys, k)
 	}
-	sort.SortStrings(keys)
+	sort.Strings(keys)
 	for k := range keys {
 		if k > 0 {
 			out += "&"

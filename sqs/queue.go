@@ -1,31 +1,32 @@
 package sqs
 
 import (
-	"aws"
+	"errors"
+	"github.com/abneptis/GoAWS"
+	"net/url"
 )
 
 import (
-	"http"
-	"os"
+	"encoding/xml"
+	"net/http"
 	"strconv"
-	"xml"
 )
 
 type Queue struct {
-	URL  *http.URL
+	URL  *url.URL
 	conn *aws.Conn
 }
 
-func NewQueue(url *http.URL) *Queue {
+func NewQueue(url_ *url.URL) *Queue {
 	return &Queue{
-		URL:  url,
-		conn: aws.NewConn(aws.URLDialer(url, nil)),
+		URL:  url_,
+		conn: aws.NewConn(aws.URLDialer(url_, nil)),
 	}
 }
 
-func (self *Queue) DeleteQueue(id *aws.Signer) (err os.Error) {
+func (self *Queue) DeleteQueue(id *aws.Signer) (err error) {
 	var resp *http.Response
-	parms := http.Values{}
+	parms := url.Values{}
 	parms.Set("Action", "DeleteQueue")
 
 	req := aws.NewRequest(self.URL, "GET", nil, parms)
@@ -35,7 +36,7 @@ func (self *Queue) DeleteQueue(id *aws.Signer) (err os.Error) {
 		if err == nil {
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
-				err = os.NewError("Unexpected response")
+				err = errors.New("Unexpected response")
 			}
 		}
 	}
@@ -43,9 +44,9 @@ func (self *Queue) DeleteQueue(id *aws.Signer) (err os.Error) {
 	return
 }
 
-func (self *Queue) Push(id *aws.Signer, body []byte) (err os.Error) {
+func (self *Queue) Push(id *aws.Signer, body []byte) (err error) {
 	var resp *http.Response
-	parms := http.Values{}
+	parms := url.Values{}
 	parms.Set("Action", "SendMessage")
 	parms.Set("MessageBody", string(body))
 	req := aws.NewRequest(self.URL, "GET", nil, parms)
@@ -55,7 +56,7 @@ func (self *Queue) Push(id *aws.Signer, body []byte) (err os.Error) {
 		if err == nil {
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
-				err = os.NewError("Unexpected response")
+				err = errors.New("Unexpected response")
 			}
 		}
 	}
@@ -63,9 +64,9 @@ func (self *Queue) Push(id *aws.Signer, body []byte) (err os.Error) {
 }
 
 // Note: 0 is a valid timeout!!
-func (self *Queue) Peek(id *aws.Signer, vt int) (body []byte, msgid string, err os.Error) {
+func (self *Queue) Peek(id *aws.Signer, vt int) (body []byte, msgid string, err error) {
 	var resp *http.Response
-	parms := http.Values{}
+	parms := url.Values{}
 	parms.Set("Action", "ReceiveMessage")
 	if vt >= 0 {
 		parms.Set("VisibilityTimeout", strconv.Itoa(vt))
@@ -78,11 +79,11 @@ func (self *Queue) Peek(id *aws.Signer, vt int) (body []byte, msgid string, err 
 			defer resp.Body.Close()
 		}
 		if err == nil && resp.StatusCode != http.StatusOK {
-			err = os.NewError("Unexpected response")
+			err = errors.New("Unexpected response")
 		}
 		if err == nil {
 			msg := message{}
-			err = xml.Unmarshal(resp.Body, &msg)
+			err = xml.NewDecoder(resp.Body).Decode(&msg)
 			if err == nil {
 				body, msgid = msg.Body, msg.ReceiptHandle
 			}
@@ -92,9 +93,9 @@ func (self *Queue) Peek(id *aws.Signer, vt int) (body []byte, msgid string, err 
 }
 
 // Note: 0 is a valid timeout!!
-func (self *Queue) Delete(id *aws.Signer, mid string) (err os.Error) {
+func (self *Queue) Delete(id *aws.Signer, mid string) (err error) {
 	var resp *http.Response
-	parms := http.Values{}
+	parms := url.Values{}
 	parms.Set("Action", "DeleteMessage")
 	parms.Set("ReceiptHandle", mid)
 	req := aws.NewRequest(self.URL, "GET", nil, parms)
@@ -105,7 +106,7 @@ func (self *Queue) Delete(id *aws.Signer, mid string) (err os.Error) {
 			defer resp.Body.Close()
 		}
 		if resp.StatusCode != http.StatusOK {
-			err = os.NewError("Unexpected response")
+			err = errors.New("Unexpected response")
 		}
 	}
 	return
@@ -119,6 +120,6 @@ type message struct {
 }
 
 // Closes the underlying connection
-func (self *Queue) Close() (err os.Error) {
+func (self *Queue) Close() (err error) {
 	return self.conn.Close()
 }
